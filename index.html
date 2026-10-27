@@ -1,0 +1,2371 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão Cabine - Supervisório Completo</title>
+    <!-- Biblioteca para exportar e importar Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            /* Fundo geral cinza claro e cabeçalho amarelo claro */
+            --bg-base: #f1f5f9;
+            --bg-header: #fef08a;
+            --header-border: #facc15;
+            --header-text: #0f172a;
+
+            --bg-card: #ffffff;
+            --bg-card-hover: #f8fafc;
+            --bg-input: #ffffff;
+            --border-color: #e2e8f0;
+            --border-highlight: #cbd5e1;
+            
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            
+            --primary: #d97706;
+            --primary-hover: #b45309;
+            
+            --vazio: #e11d48;
+            --cheio: #059669;
+            --whv: #0284c7;
+            --whc: #2563eb;
+            --vt: #d97706;
+            --ct: #475569;
+            --linha-l: #059669;
+            --manut: #64748b;
+            
+            --alert-bg-red: rgba(225, 29, 72, 0.15); 
+            --alert-bg-yellow: rgba(217, 119, 6, 0.15); 
+            --andamento: #fef3c7;
+        }
+
+        * { box-sizing: border-box; }
+
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; 
+            margin: 0; 
+            background: var(--bg-base); 
+            color: var(--text-main); 
+            overflow-x: hidden; 
+            min-height: 100vh;
+        }
+
+        /* HEADER */
+        .header { 
+            background: var(--bg-header); 
+            padding: 10px 24px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            border-bottom: 2px solid var(--header-border); 
+            position: sticky; 
+            top: 0; 
+            z-index: 1000; 
+            height: 64px; 
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        .header h1 { 
+            margin: 0; 
+            font-size: 20px; 
+            font-weight: 900; 
+            letter-spacing: 0.05em; 
+            text-transform: uppercase; 
+            color: var(--header-text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-home { 
+            position: absolute; 
+            left: 24px; 
+            background: #ffffff; 
+            color: var(--header-text); 
+            border: 1px solid var(--header-border); 
+            padding: 8px 18px; 
+            cursor: pointer; 
+            font-weight: 800; 
+            font-size: 13px;
+            border-radius: 8px; 
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        .btn-home:hover {
+            background: #fef9c3;
+            transform: translateY(-1px);
+        }
+
+        /* MENU INICIAL */
+        #view-home { 
+            display: flex; 
+            min-height: calc(100vh - 64px); 
+            justify-content: center; 
+            align-items: center; 
+            gap: 16px; 
+            flex-wrap: wrap; 
+            padding: 32px 24px; 
+            box-sizing: border-box; 
+        }
+        .menu-block { 
+            width: 180px; 
+            height: 180px; 
+            background: var(--bg-card); 
+            border: 1.5px solid var(--border-color); 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            text-align: center; 
+            cursor: pointer; 
+            border-radius: 16px; 
+            font-weight: 800; 
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04); 
+            font-size: 13px; 
+            color: var(--text-main);
+            padding: 16px;
+        }
+        .menu-block:hover { 
+            background: var(--bg-card-hover); 
+            border-color: #f59e0b;
+            transform: translateY(-4px); 
+            box-shadow: 0 10px 20px -3px rgba(217, 119, 6, 0.15);
+            color: var(--primary);
+        }
+        .menu-block span { 
+            font-size: 36px; 
+            margin-bottom: 12px; 
+            transition: transform 0.2s ease;
+        }
+        .menu-block:hover span {
+            transform: scale(1.12);
+        }
+
+        /* ESTILO RESET MANUAL */
+        .reset-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 20px; padding: 10px 0; }
+        .reset-card { 
+            background: var(--bg-card); 
+            border: 1px solid var(--border-color); 
+            border-radius: 14px; 
+            padding: 18px; 
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04); 
+        }
+        .reset-card-header { 
+            margin-bottom: 15px; 
+            font-size: 18px; 
+            font-weight: 800; 
+            color: var(--primary); 
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .reset-card-header small { color: var(--text-muted); font-weight: normal; font-size: 14px; margin-left: 5px; }
+        .reset-item-row { 
+            display: flex; 
+            align-items: center; 
+            margin-bottom: 10px; 
+            background: var(--bg-card-hover); 
+            border: 1px solid var(--border-color); 
+            border-radius: 8px; 
+            padding: 6px 12px; 
+            position: relative; 
+        }
+        .status-indicator-bar { width: 6px; height: 35px; border-radius: 3px; margin-right: 12px; }
+        .reset-item-label { font-weight: 800; font-size: 14px; flex-grow: 1; color: var(--text-main); }
+        .reset-btn-group { display: flex; gap: 6px; }
+        .btn-opt { 
+            border: 1px solid var(--border-color); 
+            background: #ffffff; 
+            padding: 6px 10px; 
+            border-radius: 6px; 
+            font-size: 11px; 
+            font-weight: 800; 
+            cursor: pointer; 
+            transition: all 0.2s ease; 
+            min-width: 44px; 
+            text-align: center; 
+            color: var(--text-muted); 
+        }
+        .btn-opt:hover {
+            border-color: var(--border-highlight);
+            color: var(--text-main);
+        }
+        
+        /* CORES DOS BOTÕES ATIVOS */
+        .btn-opt.active-WHV { background: var(--whv); color: #fff; border-color: var(--whv); }
+        .btn-opt.active-WHC { background: var(--whc); color: #fff; border-color: var(--whc); }
+        .btn-opt.active-VT { background: var(--vt); color: #fff; border-color: var(--vt); }
+        .btn-opt.active-CT { background: var(--ct); color: #fff; border-color: var(--ct); }
+        .btn-opt.active-L { background: var(--linha-l); color: #fff; border-color: var(--linha-l); }
+        .btn-opt.active-MANUT { background: var(--manut); color: #fff; border-color: var(--manut); }
+
+        /* CORES DAS BARRAS LATERAIS */
+        .bar-WHV { background-color: var(--whv); }
+        .bar-WHC { background-color: var(--whc); }
+        .bar-VT { background-color: var(--vt); }
+        .bar-CT { background-color: var(--ct); }
+        .bar-L { background-color: var(--linha-l); }
+        .bar-MANUT { background-color: var(--manut); }
+
+        /* LAYOUT SUPERVISÓRIO */
+        #view-sentado { height: calc(100vh - 64px); overflow: hidden; padding: 12px; box-sizing: border-box; }
+        .main-layout-supervisorio { display: grid; grid-template-columns: 3fr 1fr 1fr; gap: 12px; height: 100%; }
+        .sup-column { 
+            background: var(--bg-card); 
+            border: 1px solid var(--border-color); 
+            border-radius: 14px; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .sup-header { 
+            padding: 12px; 
+            text-align: center; 
+            font-weight: 900; 
+            color: white; 
+            font-size: 13px; 
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+        .sup-content { 
+            flex-grow: 1; 
+            overflow-y: auto; 
+            padding: 12px; 
+            background: #f8fafc; 
+        }
+
+        /* ANIMAÇÕES DE ALERTA */
+        @keyframes blink-red { 0% { background-color: var(--bg-card); } 50% { background-color: var(--alert-bg-red); } 100% { background-color: var(--bg-card); } }
+        .alert-blink { animation: blink-red 1s infinite !important; }
+        @keyframes blink-yellow { 0% { background-color: var(--bg-card); } 50% { background-color: var(--alert-bg-yellow); } 100% { background-color: var(--bg-card); } }
+        .warning-blink { animation: blink-yellow 1s infinite !important; }
+        .row-in-progress { background-color: var(--andamento) !important; font-weight: 600; }
+
+        /* MAPA */
+        .map-wrapper-super { transform: scale(0.65); transform-origin: top left; position: relative; width: 850px; height: 1000px; }
+        .map-container { position: relative; width: 100%; height: 100%; background: #f8fafc; border: 1px solid var(--border-color); border-radius: 8px; }
+        .map-station-box { 
+            position: absolute; 
+            border: 1px solid var(--border-color); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-weight: 800; 
+            font-size: 12px; 
+            background: #ffffff; 
+            color: #0f172a;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .st-gray { background: #e2e8f0 !important; color: var(--text-muted) !important; border-color: #cbd5e1 !important; }
+        .car-marker-box { 
+            position: absolute; 
+            background-color: #ffffff; 
+            border: 2px solid var(--border-highlight); 
+            width: 110px; 
+            border-radius: 8px; 
+            font-size: 12px; 
+            z-index: 10; 
+            padding-bottom: 5px; 
+            box-sizing: border-box; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .marker-header { 
+            padding: 4px; 
+            font-weight: 800; 
+            text-align: center; 
+            border-bottom: 1px solid var(--border-color); 
+            background-color: #fef3c7; 
+            color: var(--primary);
+        }
+        .marker-row { display: flex; justify-content: space-between; align-items: center; padding: 3px 10px; }
+        .status-circle { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 10px; }
+        .bg-v { background-color: var(--vazio); }
+        .bg-c { background-color: var(--cheio); }
+
+        /* CARDS / TABELAS */
+        .sup-card { 
+            background: #ffffff; 
+            border: 1px solid var(--border-color); 
+            margin-bottom: 8px; 
+            padding: 10px 12px; 
+            border-radius: 8px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            font-size: 13px; 
+            border-left: 4px solid var(--border-color); 
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+            color: var(--text-main);
+        }
+        .sup-card small { color: var(--text-muted); }
+        .sup-badge { padding: 4px 10px; border-radius: 6px; font-weight: 800; color: white; min-width: 44px; text-align: center; font-size: 11px; }
+        .view-container { display: none; padding: 24px; animation: fadeIn 0.25s ease-out; }
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 8px; }
+        
+        .table-std { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 15px; 
+            background: #ffffff; 
+            border-radius: 8px; 
+            overflow: hidden; 
+            border: 1px solid var(--border-color);
+        }
+        .table-std th { 
+            background: #f8fafc; 
+            color: var(--text-muted); 
+            padding: 14px 16px; 
+            text-align: left; 
+            font-size: 12px; 
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            white-space: nowrap; 
+            border-bottom: 1px solid var(--border-color);
+        }
+        .table-std td { 
+            padding: 12px 16px; 
+            border-bottom: 1px solid var(--border-color); 
+            font-size: 14px; 
+            color: var(--text-main);
+        }
+        .table-std tr:hover td {
+            background-color: var(--bg-card-hover);
+        }
+        
+        .btn-picking { 
+            border: none; 
+            padding: 8px 12px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-weight: 800; 
+            font-size: 12px; 
+            transition: all 0.2s ease;
+        }
+        .btn-finalizar { 
+            background: var(--cheio); 
+            color: #fff; 
+            border: none; 
+            padding: 8px 16px; 
+            border-radius: 6px; 
+            font-weight: 800; 
+            cursor: pointer; 
+            transition: all 0.2s ease;
+        }
+        .btn-finalizar:hover { 
+            opacity: 0.9; 
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(5, 150, 105, 0.2);
+        }
+        .btn-danger { 
+            background: var(--vazio); 
+            color: #fff; 
+            border: none; 
+            padding: 8px 14px; 
+            border-radius: 6px; 
+            font-weight: 800; 
+            cursor: pointer; 
+            transition: all 0.2s ease;
+        }
+        .btn-danger:hover { 
+            opacity: 0.9; 
+            transform: translateY(-1px);
+        }
+        
+        .config-card { 
+            background: #ffffff; 
+            padding: 24px; 
+            border-radius: 14px; 
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.04); 
+            margin-bottom: 24px; 
+        }
+        .config-card h2 {
+            margin-top: 0;
+            margin-bottom: 18px;
+            font-size: 20px;
+            font-weight: 900;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        input, select { 
+            padding: 10px 14px; 
+            background: #ffffff;
+            color: var(--text-main);
+            border: 1px solid var(--border-color); 
+            border-radius: 8px; 
+            margin-right: 10px; 
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        input:focus, select:focus {
+            border-color: #f59e0b;
+            box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+        }
+        input[type="file"] {
+            background: #ffffff;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+        
+        .grid-rota { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .prog-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 15px; }
+        .badge-total { 
+            background: #f8fafc; 
+            color: var(--primary); 
+            border: 1px solid var(--border-color); 
+            padding: 6px 16px; 
+            border-radius: 20px; 
+            font-size: 13px; 
+            font-weight: 800; 
+        }
+        .badge-rank { font-weight: 800; color: var(--primary); }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+
+        /* ALTERAÇÃO EXCLUSIVA DA VISÃO PICKING: duas colunas responsivas */
+        .picking-lines-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 20px;
+            align-items: start;
+        }
+        .picking-line-column {
+            min-width: 0;
+        }
+        .picking-line-title {
+            margin: 0 0 14px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            background: var(--text-main);
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 900;
+            text-align: center;
+            letter-spacing: 0.05em;
+        }
+        .picking-line-column .config-card {
+            padding: 16px;
+        }
+        .picking-line-column .table-std {
+            width: 100%;
+            min-width: 0;
+            table-layout: auto;
+        }
+        .picking-line-column .table-std th,
+        .picking-line-column .table-std td {
+            padding: 8px 5px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        .picking-line-column .table-std th:last-child,
+        .picking-line-column .table-std td:last-child {
+            min-width: 176px;
+            width: 176px;
+            white-space: nowrap;
+        }
+        .picking-line-column .btn-picking,
+        .picking-line-column .btn-finalizar {
+            padding: 6px 8px;
+            font-size: 11px;
+        }
+        .picking-line-column .table-responsive {
+            overflow-x: hidden;
+        }
+        @media (max-width: 1100px) {
+            .picking-lines-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        @media (max-width: 900px) {
+            .grid-rota { grid-template-columns: 1fr; }
+            #view-home { flex-wrap: wrap; height: auto; }
+        }
+
+        /* ALTERACAO EXCLUSIVA: novo layout da linha de producao + tela cheia */
+        .production-column { position: relative; }
+        .production-header { display:flex; align-items:center; justify-content:center; position:relative; }
+        .production-fullscreen-btn { position:absolute; right:10px; top:50%; transform:translateY(-50%); border:1px solid rgba(255,255,255,.65); background:rgba(255,255,255,.16); color:#fff; border-radius:6px; padding:5px 9px; font-size:11px; font-weight:800; cursor:pointer; }
+        .production-fullscreen-btn:hover { background:rgba(255,255,255,.28); }
+        .production-layout-content { position:relative; overflow:auto; padding:8px; background:#eef2f6; }
+        .production-layout-viewport { width:100%; min-height:100%; overflow:auto; }
+        .production-factory { position:relative; width:2048px; height:1365px; background-color:#fff; background-image:radial-gradient(#e2e8f0 1px,transparent 1px); background-size:24px 24px; border:1px solid #cbd5e1; border-radius:8px; transform-origin:top left; }
+        .production-factory .layout-line-title { position:absolute; display:flex; align-items:center; justify-content:center; height:50px; padding:0 20px; background:#fff; border:1px solid #cbd5e1; border-radius:6px; box-shadow:0 2px 6px rgba(0,0,0,.04); font-size:15px; font-weight:800; color:#1e293b; white-space:nowrap; }
+        .production-factory .layout-station { position:absolute; display:flex; align-items:center; justify-content:center; text-align:center; background:#dbe7f6; border:1px solid #64748b; border-radius:3px; font-size:11px; font-weight:800; color:#1e293b; letter-spacing:-.2px; box-shadow:0 1px 2px rgba(0,0,0,.04); }
+        .production-factory .layout-station.yellow,.production-factory .layout-station.test { background:#fae17d; }
+        .production-factory .layout-card { position:absolute; width:50px; height:36px; background:#fff; border:1px solid #cbd5e1; border-radius:4px; box-shadow:0 1px 3px rgba(0,0,0,.08); display:flex; flex-direction:column; overflow:hidden; }
+        .production-factory .layout-card-number { height:15px; display:flex; align-items:center; justify-content:center; background:#fae17d; color:#1e293b; font-size:9.5px; font-weight:800; border-bottom:1px solid rgba(0,0,0,.06); }
+        .production-factory .layout-card-status { height:19px; display:flex; align-items:center; justify-content:space-evenly; padding:0 2px; background:#fff; }
+        .production-factory .layout-ci { display:inline-flex; align-items:center; gap:1.5px; }
+        .production-factory .layout-lbl { font-size:7.5px; font-weight:700; color:#64748b; }
+        .production-factory .layout-dot { width:9px; height:9px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-size:6.5px; font-weight:800; line-height:1; }
+        .production-factory .layout-dot.green { background:#00875a; }
+        .production-factory .layout-dot.red { background:#d32f2f; }
+        .production-factory .layout-wall { position:absolute; background:#94a3b8; border-radius:2px; }
+        .production-factory .layout-legend { position:absolute; left:20px; bottom:16px; color:#64748b; font-size:11px; font-weight:600; }
+        .production-column:fullscreen { width:100vw; height:100vh; border-radius:0; background:#eef2f6; }
+        .production-column:fullscreen .production-layout-content { flex:1; min-height:0; }
+        .production-column:fullscreen .production-header { flex:0 0 auto; }
+
+        /* AJUSTE VISUAL EXCLUSIVO: maior legibilidade e viewport sem sobras */
+        .production-layout-content { overflow: hidden !important; padding: 4px !important; }
+        .production-layout-viewport { overflow: hidden !important; position: relative; min-height: 0 !important; }
+        .production-factory .layout-line-title { font-size: 18px; font-weight: 900; border-width: 2px; box-shadow: 0 2px 7px rgba(15,23,42,.12); }
+        .production-factory .layout-station { font-size: 15px; font-weight: 900; border-width: 2px; border-color: #475569; box-shadow: 0 2px 5px rgba(15,23,42,.12); }
+        .production-factory .layout-card { width: 66px; height: 48px; border-width: 2px; border-color: #b8c3d1; border-radius: 6px; box-shadow: 0 2px 6px rgba(15,23,42,.14); }
+        .production-factory .layout-card-number { height: 20px; font-size: 12px; font-weight: 900; }
+        .production-factory .layout-card-status { height: 26px; padding: 0 4px; }
+        .production-factory .layout-lbl { font-size: 9px; font-weight: 800; }
+        .production-factory .layout-dot { width: 13px; height: 13px; font-size: 8px; font-weight: 900; }
+
+        /* CORRECAO EXCLUSIVA DO ENQUADRAMENTO - dados e coordenadas preservados */
+        .production-layout-content{padding:0!important;overflow:hidden!important;display:flex!important;min-height:0!important;}
+        .production-layout-viewport{position:relative!important;width:100%!important;height:100%!important;min-height:0!important;overflow:hidden!important;flex:1 1 auto!important;}
+        .production-factory{position:absolute!important;margin:0!important;}
+        .production-column:fullscreen .production-layout-content{height:auto!important;flex:1 1 auto!important;}
+
+        /* CORRECAO EXCLUSIVA DOS CARDS: dimensoes compativeis com as coordenadas originais */
+        .production-factory .layout-card {
+            width: 50px !important;
+            height: 34px !important;
+            border-width: 1px !important;
+            border-color: #94a3b8 !important;
+            border-radius: 4px !important;
+            box-shadow: 0 1px 3px rgba(15,23,42,.16) !important;
+            z-index: 5 !important;
+        }
+        .production-factory .layout-card-number {
+            height: 14px !important;
+            min-height: 14px !important;
+            font-size: 9px !important;
+            line-height: 14px !important;
+            font-weight: 900 !important;
+        }
+        .production-factory .layout-card-status {
+            height: 18px !important;
+            min-height: 18px !important;
+            padding: 0 2px !important;
+        }
+        .production-factory .layout-ci { gap: 1px !important; }
+        .production-factory .layout-lbl {
+            font-size: 7px !important;
+            line-height: 1 !important;
+            font-weight: 800 !important;
+        }
+        .production-factory .layout-dot {
+            width: 9px !important;
+            height: 9px !important;
+            min-width: 9px !important;
+            font-size: 6px !important;
+            line-height: 9px !important;
+        }
+        .production-factory .layout-station { z-index: 2 !important; }
+
+        /* ANDON TV - CAMADA VISUAL FINAL. DADOS, COORDENADAS E LOGICA BLOQUEADOS. */
+        #view-sentado { padding: 8px; }
+        .production-column { background:#dfe7ee; border-color:#b8c4cf; }
+        .production-header {
+            min-height:34px; padding:7px 12px !important;
+            background:#087f5b !important; border-bottom:1px solid #066b4d;
+            font-size:14px; letter-spacing:.08em; box-shadow:0 1px 4px rgba(15,23,42,.14);
+        }
+        .production-fullscreen-btn {
+            right:7px; padding:4px 9px; min-height:24px; border-radius:5px;
+            border-color:rgba(255,255,255,.72); background:rgba(255,255,255,.12);
+            font-size:10px; letter-spacing:.03em; box-shadow:none;
+        }
+        .production-fullscreen-btn:focus-visible { outline:3px solid #fde68a; outline-offset:2px; }
+        .production-layout-content { background:#dfe7ee !important; }
+        .production-factory {
+            background:#f7f9fb !important; background-image:none !important;
+            border:1px solid #aebbc7 !important; border-radius:4px !important;
+            box-shadow:0 3px 12px rgba(15,23,42,.10) !important;
+        }
+        .production-factory .layout-line-title {
+            background:#17324d !important; color:#fff !important;
+            border:1px solid #0f263b !important; border-radius:5px !important;
+            font-size:16px !important; font-weight:900 !important; letter-spacing:.015em;
+            box-shadow:0 2px 4px rgba(15,23,42,.14) !important;
+        }
+        .production-factory .layout-station {
+            background:#cbd9e8 !important; color:#102235 !important;
+            border:2px solid #526a80 !important; border-radius:3px !important;
+            font-size:14px !important; font-weight:900 !important;
+            text-shadow:0 1px 0 rgba(255,255,255,.65);
+            box-shadow:0 1px 2px rgba(15,23,42,.10) !important;
+        }
+        .production-factory .layout-station.yellow,
+        .production-factory .layout-station.test {
+            background:#f5cf58 !important; color:#2b2409 !important;
+            border-color:#8b6d13 !important;
+        }
+        .production-factory .layout-card {
+            background:#fff !important; border:1.5px solid #718096 !important;
+            border-radius:4px !important; box-shadow:0 1px 3px rgba(15,23,42,.18) !important;
+        }
+        .production-factory .layout-card-number {
+            background:#f4cf58 !important; color:#111827 !important;
+            border-bottom:1px solid #94751b !important; font-size:10px !important;
+            font-weight:950 !important; letter-spacing:.01em;
+        }
+        .production-factory .layout-card-status { background:#fff !important; }
+        .production-factory .layout-lbl { color:#24364a !important; font-weight:900 !important; }
+        .production-factory .layout-dot.green { background:#00875a !important; box-shadow:0 0 0 1px #05603f; }
+        .production-factory .layout-dot.red { background:#d62828 !important; box-shadow:0 0 0 1px #991b1b; }
+        .production-factory .layout-wall { background:#73869a !important; }
+        .production-factory .layout-legend { color:#40566d !important; font-weight:700 !important; }
+        .production-column:fullscreen { background:#dfe7ee !important; }
+        .production-column:fullscreen .production-header { min-height:32px; padding:6px 10px !important; }
+        @media (min-width: 3000px) {
+            .production-header { font-size:18px; min-height:44px; }
+            .production-fullscreen-btn { font-size:13px; padding:6px 12px; }
+        }
+
+        /* CONTROLES DE ZOOM DA LINHA DE PRODUCAO */
+        .production-zoom-controls {
+            position:absolute; left:8px; top:50%; transform:translateY(-50%);
+            display:flex; align-items:center; gap:4px; z-index:3;
+        }
+        .production-zoom-btn {
+            border:1px solid rgba(255,255,255,.72); background:rgba(255,255,255,.14);
+            color:#fff; height:25px; min-width:29px; padding:0 7px; border-radius:5px;
+            font-size:14px; line-height:1; font-weight:900; cursor:pointer;
+        }
+        .production-zoom-btn:hover { background:rgba(255,255,255,.27); }
+        .production-zoom-btn:focus-visible { outline:3px solid #fde68a; outline-offset:2px; }
+        .production-zoom-value {
+            min-width:45px; text-align:center; color:#fff; font-size:10px;
+            font-weight:900; letter-spacing:.02em;
+        }
+        .production-layout-viewport.zoom-active { overflow:auto !important; }
+    
+          /* CSS HIBRIDO - SOMENTE VISUAL DA LINHA DE PRODUCAO */
+          .production-factory .layout-station {
+              background:#d5e1ed !important;
+              color:#102235 !important;
+              border:2px solid #536b80 !important;
+              border-radius:5px !important;
+              font-size:15px !important;
+              font-weight:900 !important;
+              box-shadow:0 2px 5px rgba(15,23,42,.13) !important;
+          }
+          .production-factory .layout-station.yellow,
+          .production-factory .layout-station.test {
+              background:#f5cf58 !important;
+              color:#2b2409 !important;
+              border-color:#8b6d13 !important;
+          }
+          .production-factory .layout-card {
+              width:50px !important;
+              height:34px !important;
+              background:#fff !important;
+              border:1.5px solid #9aa8b7 !important;
+              border-radius:6px !important;
+              box-shadow:0 2px 5px rgba(15,23,42,.16) !important;
+              overflow:hidden !important;
+              z-index:5 !important;
+          }
+          .production-factory .layout-card-number {
+              height:14px !important;
+              min-height:14px !important;
+              line-height:14px !important;
+              background:#fff0bd !important;
+              color:#c65f00 !important;
+              border-bottom:1px solid #e6c770 !important;
+              font-size:9.5px !important;
+              font-weight:900 !important;
+          }
+          .production-factory .layout-card-status {
+              height:18px !important;
+              min-height:18px !important;
+              padding:0 2px !important;
+              background:#fff !important;
+              justify-content:space-between !important;
+          }
+          .production-factory .layout-ci { gap:2px !important; }
+          .production-factory .layout-lbl {
+              font-size:8px !important;
+              color:#26384a !important;
+              font-weight:800 !important;
+          }
+          .production-factory .layout-dot {
+              width:9px !important;
+              height:9px !important;
+              min-width:9px !important;
+              line-height:9px !important;
+              font-size:6px !important;
+              font-weight:900 !important;
+              box-shadow:none !important;
+          }
+          .production-factory .layout-dot.green { background:#079669 !important; }
+          .production-factory .layout-dot.red { background:#e11d48 !important; }
+
+        /* VISÃO PICKING 8 GRUPOS - alteração isolada */
+        #view-picking { padding: 10px 12px; }
+        .picking-section { margin-bottom: 12px; }
+        .picking-section-label { margin:0 0 7px; padding:7px 12px; border-radius:7px; background:#17324d; color:#fff; font-size:14px; font-weight:900; letter-spacing:.06em; text-transform:uppercase; }
+        .picking-section-label.production { background:#087f5b; }
+        .picking-dashboard-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; align-items:start; }
+        .picking-group { min-width:0; background:#fff; border:1px solid #dbe3eb; border-radius:9px; box-shadow:0 2px 6px rgba(15,23,42,.07); overflow:hidden; }
+        .picking-group-title { margin:0; padding:9px 8px; background:#10263d; color:#fff; text-align:center; font-size:14px; font-weight:900; letter-spacing:.035em; }
+        .picking-block { padding:8px; }
+        .picking-block + .picking-block { border-top:1px solid #e2e8f0; }
+        .picking-block-heading { display:flex; align-items:center; gap:6px; margin:0 0 5px; font-size:11px; font-weight:900; }
+        .picking-block-heading.progress { color:#059669; }
+        .picking-block-heading.waiting { color:#e11d48; }
+        .picking-dot { width:9px; height:9px; border-radius:50%; flex:0 0 9px; }
+        .picking-dot.green { background:#10b981; }
+        .picking-dot.red { background:#e11d48; }
+        .picking-table-wrap { width:100%; overflow-x:hidden; }
+        .picking-table { width:100%; border-collapse:collapse; table-layout:fixed; }
+        .picking-table th { background:#f8fafc; color:#52647a; padding:5px 3px; text-align:left; font-size:8px; font-weight:900; letter-spacing:.025em; white-space:nowrap; border-bottom:1px solid #e2e8f0; }
+        .picking-table td { padding:5px 3px; border-bottom:1px solid #eef2f6; font-size:9px; color:#172033; vertical-align:middle; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .picking-table th.rank-col,.picking-table td.rank-col { width:28px; }
+        .picking-table th.wh-col,.picking-table td.wh-col { width:34px; }
+        .picking-table th.status-col,.picking-table td.status-col { width:45px; }
+        .picking-table th.process-col,.picking-table td.process-col { width:104px; text-align:right; overflow:visible; }
+        .picking-table .sup-badge { min-width:35px; padding:3px 5px; font-size:8px; border-radius:4px; }
+        .picking-table .btn-picking,.picking-table .btn-finalizar { padding:4px 5px; font-size:8px; border-radius:4px; margin-left:2px; }
+        .picking-empty { padding:7px 4px !important; text-align:center; color:#64748b !important; font-size:9px !important; }
+        #view-picking .row-in-progress { background:#fffdf2 !important; }
+        @media (max-width:1400px) { .picking-dashboard-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+        @media (max-width:760px) { .picking-dashboard-grid { grid-template-columns:1fr; } }
+
+        /* AJUSTE FINAL DA VISAO PICKING - FIEL AO MOCKUP 16:9 */
+        #view-picking { padding: 4px 8px 6px !important; background:#edf3f8; min-height:calc(100vh - 64px); }
+        #view-picking .picking-section { margin-bottom:8px !important; }
+        #view-picking .picking-section-label { height:37px; display:flex; align-items:center; padding:0 13px; margin:0 0 5px !important; border-radius:7px; background:#0b3558 !important; color:#fff; font-size:18px; font-weight:900; letter-spacing:.01em; }
+        #view-picking .picking-section-label.production { background:#078b5d !important; }
+        #view-picking .picking-dashboard-grid { grid-template-columns:repeat(4,minmax(0,1fr)) !important; gap:7px !important; }
+        #view-picking .picking-group { border:1px solid #dce5ed; border-radius:7px; box-shadow:0 2px 5px rgba(15,23,42,.06); min-height:0; }
+        #view-picking .picking-group-title { height:52px; display:flex; align-items:center; justify-content:center; padding:0 8px; background:#0c385c !important; font-size:17px; letter-spacing:.015em; }
+        #view-picking .picking-group-title::before { content:'⚙'; margin-right:10px; color:#fff; font-size:22px; line-height:1; }
+        #view-picking .picking-block { padding:10px 12px 9px !important; }
+        #view-picking .picking-block + .picking-block { border-top:0; padding-top:9px !important; }
+        #view-picking .picking-block-heading { margin:0 0 8px; font-size:15px; gap:8px; }
+        #view-picking .picking-dot { width:17px; height:17px; flex-basis:17px; box-shadow:inset 0 0 4px rgba(255,255,255,.65),0 1px 2px rgba(0,0,0,.12); }
+        #view-picking .picking-table { table-layout:fixed; }
+        #view-picking .picking-table th { padding:7px 7px; font-size:10px; background:#f1f5f9; color:#52667d; letter-spacing:.025em; }
+        #view-picking .picking-table td { padding:7px 7px; font-size:11px; color:#0f172a; }
+        #view-picking .picking-table th.rank-col,#view-picking .picking-table td.rank-col { width:48px; }
+        #view-picking .picking-table th.wh-col,#view-picking .picking-table td.wh-col { width:58px; }
+        #view-picking .picking-table th.status-col,#view-picking .picking-table td.status-col { width:68px; }
+        #view-picking .picking-table th.process-col,#view-picking .picking-table td.process-col { width:120px; }
+        #view-picking .picking-table .sup-badge { min-width:46px; padding:5px 7px; font-size:10px; }
+        #view-picking .picking-table .btn-picking,#view-picking .picking-table .btn-finalizar { padding:6px 8px; font-size:9px; font-weight:900; }
+        #view-picking .picking-empty { height:35px; padding:9px !important; }
+        #view-picking .badge-rank { color:#f59e0b; font-size:12px; }
+        @media (max-width:1400px) { #view-picking .picking-dashboard-grid { grid-template-columns:repeat(4,minmax(0,1fr)) !important; } }
+        @media (max-width:900px) { #view-picking .picking-dashboard-grid { grid-template-columns:repeat(2,minmax(0,1fr)) !important; } }
+        @media (max-width:560px) { #view-picking .picking-dashboard-grid { grid-template-columns:1fr !important; } }
+
+/* VISAO PICKING FIEL AO MOCKUP */
+body.picking-view-active .header{height:54px!important;padding:5px 24px!important;background:#ffec80!important;border-bottom:1px solid #f2c94c!important;box-shadow:none!important}body.picking-view-active .header h1{font-size:20px!important;letter-spacing:.015em!important}body.picking-view-active .btn-home{left:23px!important;padding:7px 16px!important;font-size:13px!important;border-radius:7px!important}
+#view-picking{padding:5px 7px 12px!important;background:#eef5fa!important;min-height:calc(100vh - 54px)!important}.picking-section{margin-bottom:7px!important}.picking-section-label{height:42px!important;margin:0 0 5px!important;padding:0 16px!important;border-radius:6px!important;background:linear-gradient(90deg,#0b3658,#07304e)!important;font-size:18px!important}.picking-section-label::before{content:'⚙';margin-right:14px;font-size:19px}.picking-section-label.production{background:linear-gradient(90deg,#078b5d,#079868)!important}.picking-dashboard-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:8px!important}.picking-group{border-radius:6px!important;border:1px solid #d7e1e9!important;box-shadow:0 2px 7px rgba(15,23,42,.10)!important}.picking-group-title{height:42px!important;justify-content:flex-start!important;padding:0 15px!important;background:linear-gradient(90deg,#0b3658,#07304e)!important;font-size:17px!important}.picking-group-title::before{content:'◆'!important;margin-right:7px!important;font-size:9px!important;color:#7dd3fc!important}.picking-section:nth-of-type(2) .picking-group-title{background:linear-gradient(90deg,#087d5c,#02765a)!important}.picking-section:nth-of-type(2) .picking-group-title::before{color:#86efac!important}.picking-block{padding:8px 15px 10px!important}.picking-block+.picking-block{padding-top:12px!important;border-top:1px solid #e2e8f0!important}.picking-block-heading{margin:0 0 7px!important;font-size:14px!important}.picking-dot{width:16px!important;height:16px!important;flex-basis:16px!important}.picking-table th{height:34px!important;padding:7px 16px!important;font-size:12px!important;text-transform:none!important;background:#f0f4f8!important;color:#334a64!important}.picking-table td{height:39px!important;padding:7px 16px!important;font-size:12px!important}.picking-table th.rank-col,.picking-table td.rank-col{width:42px!important}.picking-table th.wh-col,.picking-table td.wh-col{width:74px!important}.picking-table th.process-col,.picking-table td.process-col{width:115px!important;text-align:left!important}.picking-table th.status-col,.picking-table td.status-col{display:none!important}.picking-empty{height:39px!important;font-size:11px!important}.picking-table .btn-picking,.picking-table .btn-finalizar{width:38px!important;height:32px!important;padding:0!important;font-size:0!important;border-radius:5px!important;margin-right:4px!important}.picking-table .btn-picking:not(.btn-finalizar)::after{content:'▶';font-size:14px}.picking-table .btn-finalizar::after{content:'✓';font-size:17px;color:#fff}.picking-table .btn-finalizar{background:#078996!important}.badge-rank{color:#f4a000!important;font-size:13px!important;display:inline-block!important;min-width:32px!important;white-space:nowrap!important;overflow:visible!important;text-overflow:clip!important}
+.picking-global-ranking{margin-top:24px;background:#fff;border:1px solid #d8e2eb;border-radius:7px;overflow:hidden;box-shadow:0 2px 7px rgba(15,23,42,.08)}.picking-global-ranking-header{height:50px;padding:0 18px;display:flex;align-items:center;justify-content:space-between;background:#d9e5ef;color:#123355;font-size:17px;font-weight:900}.picking-global-ranking-header span:last-child{font-size:14px}.picking-global-ranking-body{padding:0 16px 14px}.picking-global-table{width:100%;border-collapse:collapse;table-layout:fixed}.picking-global-table th{height:47px;padding:0 14px;text-align:left;color:#29435f;border-bottom:1px solid #cad6e2;font-size:13px}.picking-global-table td{height:48px;padding:0 14px;font-size:13px;border-bottom:1px solid #e3eaf0}.picking-global-table th:nth-child(1){width:48px}.picking-global-table th:nth-child(2){width:180px}.picking-global-table th:nth-child(3){width:220px}.picking-global-table th:nth-child(5){width:165px}.picking-global-table th:nth-child(6){width:180px}.picking-global-table .btn-picking,.picking-global-table .btn-finalizar{width:38px;height:32px;padding:0;border:none;border-radius:5px;font-size:0;margin-right:5px;cursor:pointer}.picking-global-table .btn-picking{background:#f59e0b}.picking-global-table .btn-picking::after{content:'▶';font-size:14px}.picking-global-table .btn-finalizar{background:#078996;color:#fff}.picking-global-table .btn-finalizar::after{content:'✓';font-size:17px}
+
+/* VISAO PICKING COMPACTA 16:9 - cards fixos e ranking sempre visivel */
+body.picking-view-active{overflow:hidden!important}
+body.picking-view-active #view-picking{height:calc(100vh - 54px)!important;min-height:0!important;overflow:hidden!important;display:none;padding:4px 7px 5px!important}
+body.picking-view-active #view-picking[style*="display: block"]{display:grid!important;grid-template-rows:minmax(0,1fr) minmax(0,1fr) minmax(150px,.86fr);gap:5px}
+#view-picking .picking-section{min-height:0!important;margin:0!important;display:grid;grid-template-rows:32px minmax(0,1fr)}
+#view-picking .picking-section-label{height:32px!important;margin:0 0 4px!important;padding:0 12px!important;font-size:14px!important}
+#view-picking .picking-dashboard-grid{height:100%;min-height:0;align-items:stretch!important;gap:6px!important}
+#view-picking .picking-group{height:100%;min-height:0;display:grid;grid-template-rows:32px minmax(0,.78fr) minmax(0,1.22fr);overflow:hidden}
+#view-picking .picking-group-title{height:32px!important;padding:0 10px!important;font-size:13px!important}
+#view-picking .picking-block{min-height:0;overflow:hidden;padding:4px 8px!important}
+#view-picking .picking-block+.picking-block{padding-top:4px!important}
+#view-picking .picking-block-heading{height:18px;margin:0 0 3px!important;font-size:10px!important;gap:5px!important}
+#view-picking .picking-dot{width:10px!important;height:10px!important;flex-basis:10px!important}
+#view-picking .picking-table-wrap{height:calc(100% - 21px);overflow:hidden!important}
+#view-picking .picking-table th{height:20px!important;padding:2px 5px!important;font-size:8px!important}
+#view-picking .picking-table td{height:22px!important;padding:2px 5px!important;font-size:9px!important}
+#view-picking .picking-empty{height:22px!important;padding:3px!important;font-size:9px!important}
+#view-picking .picking-table .btn-picking,#view-picking .picking-table .btn-finalizar{width:27px!important;height:20px!important;margin-right:2px!important}
+#view-picking .picking-table .btn-picking:not(.btn-finalizar)::after{font-size:10px!important}
+#view-picking .picking-table .btn-finalizar::after{font-size:12px!important}
+#view-picking .picking-table th.rank-col,#view-picking .picking-table td.rank-col{width:46px!important;min-width:46px!important;overflow:visible!important;text-overflow:clip!important}
+#view-picking .picking-table th.wh-col,#view-picking .picking-table td.wh-col{width:40px!important}
+#view-picking .picking-table th.process-col,#view-picking .picking-table td.process-col{width:66px!important}
+#view-picking .picking-overflow-row td{height:18px!important;background:#f8fafc;color:#475569!important;text-align:center;font-size:8px!important;font-weight:800}
+#view-picking .picking-global-ranking{min-height:0;margin:0!important;display:grid;grid-template-rows:31px minmax(0,1fr);overflow:hidden}
+#view-picking .picking-global-ranking-header{height:31px!important;padding:0 12px!important;font-size:12px!important}
+#view-picking .picking-global-ranking-header span:last-child{font-size:10px!important}
+#view-picking .picking-global-ranking-body{min-height:0;padding:0 8px 4px!important;overflow-y:auto}
+#view-picking .picking-global-table th{position:sticky;top:0;z-index:2;background:#fff;height:24px!important;padding:0 8px!important;font-size:9px!important}
+#view-picking .picking-global-table td{height:25px!important;padding:0 8px!important;font-size:9px!important}
+#view-picking .picking-global-table .btn-picking,#view-picking .picking-global-table .btn-finalizar{width:27px!important;height:20px!important;margin-right:2px!important}
+#view-picking .picking-global-table .btn-picking::after{font-size:10px!important}
+#view-picking .picking-global-table .btn-finalizar::after{font-size:12px!important}
+@media(max-height:800px){body.picking-view-active #view-picking{grid-template-rows:minmax(0,1fr) minmax(0,1fr) minmax(125px,.72fr)}#view-picking .picking-group{grid-template-rows:29px minmax(0,.72fr) minmax(0,1.28fr)}#view-picking .picking-group-title{height:29px!important}}
+
+.reset-filters{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 16px;padding:12px;background:#f8fafc;border:1px solid var(--border-color);border-radius:10px}.reset-filters input{width:220px;margin:0}.reset-filters select{min-width:220px;margin:0}.btn-reset-filter{padding:10px 14px;border:1px solid #cbd5e1;background:#fff;color:#334155;border-radius:8px;font-weight:800;cursor:pointer}.btn-reset-filter:hover{background:#f1f5f9}
+
+/* RESET MANUAL: titulo e filtros fixos durante a rolagem */
+#view-reset h2{position:sticky;top:0;z-index:30;background:#fff;margin:0;padding:18px 0 14px}
+#view-reset .reset-filters{position:sticky;top:58px;z-index:29;background:#f8fafc;box-shadow:0 6px 10px rgba(15,23,42,.08)}
+
+/* SUPERVISORIO TV - MELHORIA VISUAL, SEM ALTERAR DADOS/COORDENADAS DOS CARROS */
+#view-sentado .main-layout-supervisorio{grid-template-columns:3fr 1fr 1fr!important;gap:8px!important;}
+#view-sentado .sup-column{border-radius:10px!important;}
+#view-sentado .sup-header{min-height:38px;padding:9px 10px!important;font-size:13px!important;}
+#view-sentado .production-header{background:linear-gradient(90deg,#087f5b,#066b4d)!important;font-size:16px!important;}
+#view-sentado #col-tenda>.sup-header{background:linear-gradient(90deg,#475569,#334155)!important;}
+#view-sentado #col-wh>.sup-header{background:linear-gradient(90deg,#1e3a8a,#1e40af)!important;}
+#view-sentado .sup-card{margin-bottom:6px!important;padding:8px 9px!important;border-radius:7px!important;font-size:12px!important;box-shadow:0 1px 3px rgba(15,23,42,.08)!important;}
+#view-sentado .sup-card small{font-size:9px!important;font-weight:700!important;}
+#view-sentado .sup-badge{min-width:38px!important;padding:4px 6px!important;font-size:9px!important;}
+#view-sentado #col-tenda>div:nth-child(2),#view-sentado #col-wh>div:nth-child(2){gap:5px!important;padding:5px!important;}
+#view-sentado #sup-tenda-vt-content,#view-sentado #sup-tenda-ct-content,#view-sentado #sup-wh-whv-content,#view-sentado #sup-wh-whc-content{padding:5px!important;}
+.production-zoom-controls{gap:5px!important;}
+.production-zoom-btn{height:27px!important;min-width:31px!important;}
+.production-fullscreen-btn{padding:5px 10px!important;}
+
+      /* ROTAS EM BLOCOS POR LINHA - alteração visual isolada */
+      .route-dashboard{padding:14px!important;background:#eef5fa;}
+      .route-info{padding:11px 16px;margin-bottom:16px;background:#dbeafe;border:1px solid #bfdbfe;border-radius:8px;color:#17324d;font-size:13px;}
+      .route-section{margin-bottom:20px;}
+      .route-section-header{min-height:50px;padding:0 18px;display:flex;align-items:center;justify-content:space-between;border-radius:7px;color:#fff;font-size:18px;font-weight:900;letter-spacing:.01em;box-shadow:0 2px 7px rgba(15,23,42,.10);}
+      .route-section-pickup .route-section-header{background:linear-gradient(90deg,#d96b05,#ef7600);}
+      .route-section-delivery .route-section-header{background:linear-gradient(90deg,#079669,#057a55);}
+      .route-total{min-width:56px;padding:6px 12px;text-align:center;background:rgba(255,255,255,.95);color:#17324d;border-radius:7px;font-size:13px;}
+      .route-line-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:10px;}
+      .route-line-card{background:#fff;border:1px solid #dbe3eb;border-radius:9px;overflow:hidden;box-shadow:0 2px 7px rgba(15,23,42,.08);min-width:0;}
+      .route-line-card-header{height:50px;padding:0 15px;display:flex;align-items:center;justify-content:space-between;background:#fff7ed;color:#17324d;font-size:16px;font-weight:900;border-bottom:1px solid #e5e7eb;}
+      .route-section-delivery .route-line-card-header{background:#ecfdf5;}
+      .route-line-count{min-width:36px;padding:6px 10px;border-radius:8px;text-align:center;background:#e76f00;color:#fff;}
+      .route-section-delivery .route-line-count{background:#059669;}
+      .route-line-table{width:100%;border-collapse:collapse;table-layout:auto;}
+      .route-line-table th{padding:9px 10px;background:#f8fafc;color:#52667d;text-align:left;font-size:10px;font-weight:900;text-transform:uppercase;border-bottom:1px solid #e2e8f0;white-space:nowrap;}
+      .route-line-table td{padding:9px 10px;border-bottom:1px solid #edf2f7;font-size:12px;white-space:nowrap;}
+      .route-line-table td:first-child{font-weight:900;color:#d96b05;}
+      .route-section-delivery .route-line-table td:first-child{color:#05815b;}
+      .route-line-table .btn-finalizar{padding:7px 10px;font-size:11px;}
+      .route-empty{padding:22px 10px;text-align:center;color:#64748b;font-size:12px;}
+      .route-legacy-tables{display:none!important;}
+      @media(max-width:1400px){.route-line-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+      @media(max-width:760px){.route-line-grid{grid-template-columns:1fr;}.route-section-header{font-size:14px;}}
+
+  
+        /* ROTAS INTERNA E EXTERNA: dashboard por grupo, sem impacto nas demais telas */
+        #view-rota-interna.route-dashboard,
+        #view-rota-externa.route-dashboard { padding: 10px 12px; background: #eef5fa; min-height: calc(100vh - 64px); }
+        #view-rota-interna .route-section,
+        #view-rota-externa .route-section { margin: 0 0 12px; }
+        #view-rota-interna .route-section-header,
+        #view-rota-externa .route-section-header { min-height: 42px; padding: 0 14px; font-size: 15px; border-radius: 7px; }
+        #view-rota-interna .route-line-grid,
+        #view-rota-externa .route-line-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 7px; }
+        #view-rota-interna .route-line-card,
+        #view-rota-externa .route-line-card { border-radius: 7px; box-shadow: 0 1px 5px rgba(15,23,42,.07); }
+        #view-rota-interna .route-line-card-header,
+        #view-rota-externa .route-line-card-header { height: 38px; padding: 0 10px; font-size: 12px; gap: 8px; }
+        #view-rota-interna .route-line-count,
+        #view-rota-externa .route-line-count { min-width: 60px; padding: 4px 7px; font-size: 10px; white-space: nowrap; }
+        #view-rota-interna .route-line-table th,
+        #view-rota-externa .route-line-table th { padding: 6px 5px; font-size: 8px; }
+        #view-rota-interna .route-line-table td,
+        #view-rota-externa .route-line-table td { padding: 6px 5px; font-size: 10px; }
+        #view-rota-interna .route-line-table .btn-finalizar,
+        #view-rota-externa .route-line-table .btn-finalizar { padding: 5px 7px; font-size: 9px; white-space: nowrap; }
+        #view-rota-interna .route-empty,
+        #view-rota-externa .route-empty { padding: 16px 8px; font-size: 10px; }
+        #view-rota-externa .route-section-whv .route-section-header { background: linear-gradient(90deg, var(--whv), #0369a1); }
+        #view-rota-externa .route-section-whc .route-section-header { background: linear-gradient(90deg, var(--whc), #1e40af); }
+        #view-rota-externa .route-section-whv .route-line-card-header { background: #eff6ff; }
+        #view-rota-externa .route-section-whc .route-line-card-header { background: #eef2ff; }
+        #view-rota-externa .route-section-whv .route-line-count { background: var(--whv); }
+        #view-rota-externa .route-section-whc .route-line-count { background: var(--whc); }
+        #view-rota-externa .route-section-whv .route-line-table td:first-child { color: var(--whv); }
+        #view-rota-externa .route-section-whc .route-line-table td:first-child { color: var(--whc); }
+        @media (max-width: 1100px) {
+            #view-rota-interna .route-line-grid,
+            #view-rota-externa .route-line-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (max-width: 600px) {
+            #view-rota-interna .route-line-grid,
+            #view-rota-externa .route-line-grid { grid-template-columns: 1fr; }
+        }
+
+    
+        /* AJUSTE EXCLUSIVAMENTE VISUAL DAS ROTAS: viewport sem scroll de pagina e scroll interno apos 3 carros */
+        body.route-view-active { overflow-y: hidden !important; }
+        body.route-view-active #view-rota-interna,
+        body.route-view-active #view-rota-externa {
+            height: calc(100vh - 64px) !important;
+            min-height: 0 !important;
+            overflow: hidden !important;
+            padding: 6px 8px !important;
+        }
+        body.route-view-active #view-rota-interna[style*="display: block"],
+        body.route-view-active #view-rota-externa[style*="display: block"] {
+            display: grid !important;
+            grid-template-rows: repeat(2, minmax(0, 1fr));
+            gap: 6px;
+        }
+        body.route-view-active .route-section {
+            min-height: 0 !important;
+            margin: 0 !important;
+            display: grid;
+            grid-template-rows: 32px minmax(0, 1fr);
+            overflow: hidden;
+        }
+        body.route-view-active .route-section-header {
+            min-height: 32px !important;
+            height: 32px !important;
+            padding: 0 11px !important;
+            font-size: 13px !important;
+        }
+        body.route-view-active .route-total { padding: 4px 8px; font-size: 10px; }
+        body.route-view-active .route-line-grid {
+            min-height: 0;
+            height: 100%;
+            grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+            grid-template-rows: repeat(2, minmax(0, 1fr));
+            gap: 5px !important;
+            margin-top: 4px !important;
+            align-items: stretch;
+        }
+        body.route-view-active .route-line-card {
+            min-height: 0;
+            height: 100%;
+            display: grid;
+            grid-template-rows: 29px minmax(0, 1fr);
+            overflow: hidden;
+        }
+        body.route-view-active .route-line-card-header {
+            height: 29px !important;
+            min-height: 29px !important;
+            padding: 0 8px !important;
+            font-size: 10px !important;
+            position: relative;
+            z-index: 3;
+        }
+        body.route-view-active .route-line-count { min-width: 52px; padding: 3px 6px; font-size: 8px; }
+        body.route-view-active .route-table-frame {
+            min-height: 0;
+            height: 100%;
+            display: grid;
+            grid-template-rows: 22px minmax(0, 1fr);
+            overflow: hidden;
+        }
+        body.route-view-active .route-table-head { min-height: 0; overflow: hidden; }
+        body.route-view-active .route-table-body {
+            min-height: 0;
+            overflow-y: auto;
+            overflow-x: auto;
+            scrollbar-width: thin;
+        }
+        body.route-view-active .route-table-head .route-line-table,
+        body.route-view-active .route-table-body .route-line-table { margin: 0; }
+        body.route-view-active .route-line-table { width: 100%; table-layout: fixed; }
+        body.route-view-active .route-line-table th { height: 22px; padding: 3px 4px !important; font-size: 7px !important; }
+        body.route-view-active .route-line-table td { height: 25px; padding: 3px 4px !important; font-size: 8px !important; overflow: hidden; text-overflow: ellipsis; }
+        body.route-view-active .route-line-table .btn-finalizar { height: 20px; padding: 2px 5px !important; font-size: 7px !important; }
+        body.route-view-active .route-empty { height: 25px; padding: 5px 4px !important; font-size: 8px !important; }
+        body.route-view-active .route-cols-3 col:nth-child(1) { width: 45%; }
+        body.route-view-active .route-cols-3 col:nth-child(2) { width: 20%; }
+        body.route-view-active .route-cols-3 col:nth-child(3) { width: 35%; }
+        body.route-view-active .route-cols-6 col:nth-child(1) { width: 20%; }
+        body.route-view-active .route-cols-6 col:nth-child(2) { width: 9%; }
+        body.route-view-active .route-cols-6 col:nth-child(3) { width: 19%; }
+        body.route-view-active .route-cols-6 col:nth-child(4) { width: 18%; }
+        body.route-view-active .route-cols-6 col:nth-child(5) { width: 18%; }
+        body.route-view-active .route-cols-6 col:nth-child(6) { width: 16%; }
+        @media (max-width: 1100px) {
+            body.route-view-active { overflow-y: auto !important; }
+            body.route-view-active #view-rota-interna,
+            body.route-view-active #view-rota-externa { height: auto !important; overflow: visible !important; }
+            body.route-view-active #view-rota-interna[style*="display: block"],
+            body.route-view-active #view-rota-externa[style*="display: block"] { display: block !important; }
+            body.route-view-active .route-section { overflow: visible; margin-bottom: 8px !important; display: block; }
+            body.route-view-active .route-line-grid { grid-template-columns: repeat(2,minmax(0,1fr)) !important; grid-template-rows: none; height: auto; }
+            body.route-view-active .route-line-card { height: 129px; }
+        }
+        @media (max-width: 600px) {
+            body.route-view-active .route-line-grid { grid-template-columns: 1fr !important; }
+        }
+
+    
+/* VISÃO PICKING: alteração exclusiva de exibição - todos os registros no DOM com scroll interno */
+body.picking-view-active { overflow-y:hidden !important; }
+body.picking-view-active #view-picking {
+    height:calc(100vh - 54px) !important;
+    min-height:0 !important;
+    overflow:hidden !important;
+}
+body.picking-view-active #view-picking .picking-table-wrap {
+    overflow-x:hidden !important;
+    overflow-y:auto !important;
+    max-height:88px !important;
+    scrollbar-width:thin;
+    scrollbar-gutter:stable;
+}
+body.picking-view-active #view-picking .picking-table {
+    margin:0 !important;
+}
+body.picking-view-active #view-picking .picking-table thead th {
+    position:sticky;
+    top:0;
+    z-index:2;
+    background:#f8fafc;
+}
+body.picking-view-active #view-picking .picking-table tbody tr {
+    height:25px;
+}
+body.picking-view-active #view-picking .picking-table td {
+    height:25px;
+}
+body.picking-view-active #view-picking .picking-overflow-row { display:none !important; }
+
+
+/* FILTRO VISUAL DE GRUPOS - SOMENTE ROTA INTERNA E ROTA EXTERNA */
+body.route-view-active #view-rota-interna[style*="display: block"],
+body.route-view-active #view-rota-externa[style*="display: block"] {
+    grid-template-rows: 34px repeat(2,minmax(0,1fr)) !important;
+}
+.route-group-filter { display:flex; align-items:center; gap:4px; min-width:0; overflow-x:auto; scrollbar-width:thin; padding:2px 3px; background:#fff; border:1px solid #d7e1e9; border-radius:6px; }
+.route-filter-label { flex:0 0 auto; padding:0 7px; font-size:9px; font-weight:900; color:#334155; letter-spacing:.04em; }
+.route-filter-btn { flex:0 0 auto; min-height:27px; padding:4px 8px; border:1px solid #cbd5e1; border-radius:5px; background:#f8fafc; color:#334155; font-size:9px; font-weight:800; cursor:pointer; touch-action:manipulation; }
+.route-filter-btn.active { background:var(--primary); border-color:var(--primary); color:#fff; box-shadow:0 1px 3px rgba(15,23,42,.16); }
+.route-filter-btn:focus-visible { outline:2px solid #f59e0b; outline-offset:1px; }
+.route-line-grid.filtered-groups { grid-template-rows:1fr !important; }
+.route-line-grid.filtered-groups[data-visible-count="1"] { grid-template-columns:minmax(0,1fr) !important; }
+.route-line-grid.filtered-groups[data-visible-count="2"] { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
+.route-line-grid.filtered-groups[data-visible-count="3"] { grid-template-columns:repeat(3,minmax(0,1fr)) !important; }
+.route-line-grid.filtered-groups[data-visible-count="4"] { grid-template-columns:repeat(4,minmax(0,1fr)) !important; }
+.route-line-grid.filtered-groups[data-visible-count="5"], .route-line-grid.filtered-groups[data-visible-count="6"] { grid-template-columns:repeat(3,minmax(0,1fr)) !important; grid-template-rows:repeat(2,minmax(0,1fr)) !important; }
+.route-line-grid.filtered-groups[data-visible-count="7"] { grid-template-columns:repeat(4,minmax(0,1fr)) !important; grid-template-rows:repeat(2,minmax(0,1fr)) !important; }
+@media(max-width:1100px){ body.route-view-active #view-rota-interna[style*="display: block"],body.route-view-active #view-rota-externa[style*="display: block"]{display:block!important}.route-group-filter{margin-bottom:6px}.route-line-grid.filtered-groups{grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-template-rows:none!important}.route-line-grid.filtered-groups[data-visible-count="1"]{grid-template-columns:1fr!important} }
+@media(max-width:600px){.route-line-grid.filtered-groups{grid-template-columns:1fr!important}}
+
+
+/* RESPONSIVIDADE DINAMICA VISUAL CONFORME QUANTIDADE DE GRUPOS SELECIONADOS */
+body.route-view-active .route-line-grid.route-groups-many { grid-template-columns:repeat(4,minmax(0,1fr)) !important; grid-template-rows:repeat(2,minmax(0,1fr)) !important; }
+body.route-view-active .route-line-grid.route-groups-4 { grid-template-columns:repeat(4,minmax(0,1fr)) !important; grid-template-rows:1fr !important; }
+body.route-view-active .route-line-grid.route-groups-3 { grid-template-columns:repeat(3,minmax(0,1fr)) !important; grid-template-rows:1fr !important; }
+body.route-view-active .route-line-grid.route-groups-2 { grid-template-columns:repeat(2,minmax(0,1fr)) !important; grid-template-rows:1fr !important; }
+body.route-view-active .route-line-grid.route-groups-1 { grid-template-columns:minmax(0,1fr) !important; grid-template-rows:1fr !important; }
+body.route-view-active .route-groups-3 .route-line-card-header { height:33px !important; min-height:33px !important; padding:0 10px !important; font-size:12px !important; }
+body.route-view-active .route-groups-3 .route-line-count { min-width:62px; padding:4px 8px; font-size:9px; }
+body.route-view-active .route-groups-3 .route-table-frame { grid-template-rows:25px minmax(0,1fr); }
+body.route-view-active .route-groups-3 .route-line-table th { height:25px; padding:4px 5px !important; font-size:8px !important; }
+body.route-view-active .route-groups-3 .route-line-table td { height:28px; padding:4px 5px !important; font-size:9px !important; }
+body.route-view-active .route-groups-3 .route-line-table .btn-finalizar { height:23px; padding:3px 7px !important; font-size:8px !important; }
+body.route-view-active .route-groups-2 .route-line-card-header { height:37px !important; min-height:37px !important; padding:0 13px !important; font-size:14px !important; }
+body.route-view-active .route-groups-2 .route-line-count { min-width:74px; padding:5px 10px; font-size:11px; }
+body.route-view-active .route-groups-2 .route-table-frame { grid-template-rows:29px minmax(0,1fr); }
+body.route-view-active .route-groups-2 .route-line-table th { height:29px; padding:5px 7px !important; font-size:10px !important; }
+body.route-view-active .route-groups-2 .route-line-table td { height:32px; padding:5px 7px !important; font-size:11px !important; }
+body.route-view-active .route-groups-2 .route-line-table td:first-child { font-size:12px !important; }
+body.route-view-active .route-groups-2 .route-line-table .btn-finalizar { height:27px; padding:4px 10px !important; font-size:10px !important; }
+body.route-view-active .route-groups-1 .route-line-card-header { height:43px !important; min-height:43px !important; padding:0 17px !important; font-size:17px !important; }
+body.route-view-active .route-groups-1 .route-line-count { min-width:91px; padding:6px 13px; font-size:13px; }
+body.route-view-active .route-groups-1 .route-table-frame { grid-template-rows:34px minmax(0,1fr); }
+body.route-view-active .route-groups-1 .route-line-table th { height:34px; padding:6px 10px !important; font-size:12px !important; }
+body.route-view-active .route-groups-1 .route-line-table td { height:39px; padding:7px 10px !important; font-size:14px !important; }
+body.route-view-active .route-groups-1 .route-line-table td:first-child { font-size:16px !important; }
+body.route-view-active .route-groups-1 .route-line-table .btn-finalizar { height:32px; min-width:78px; padding:5px 14px !important; font-size:12px !important; }
+body.route-view-active .route-groups-1 .route-empty { font-size:12px !important; }
+@media(max-width:1100px){
+ body.route-view-active .route-line-grid.route-groups-many { grid-template-columns:repeat(2,minmax(0,1fr)) !important; grid-template-rows:none !important; }
+ body.route-view-active .route-line-grid.route-groups-4 { grid-template-columns:repeat(2,minmax(0,1fr)) !important; grid-template-rows:none !important; }
+ body.route-view-active .route-line-grid.route-groups-3 { grid-template-columns:repeat(3,minmax(0,1fr)) !important; }
+ body.route-view-active .route-line-grid.route-groups-2 { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
+ body.route-view-active .route-line-grid.route-groups-1 { grid-template-columns:1fr !important; }
+}
+@media(max-width:600px){ body.route-view-active .route-line-grid.route-groups-many,body.route-view-active .route-line-grid.route-groups-4,body.route-view-active .route-line-grid.route-groups-3,body.route-view-active .route-line-grid.route-groups-2,body.route-view-active .route-line-grid.route-groups-1{grid-template-columns:1fr!important} }
+
+</style>
+</head>
+<body>
+
+    <div class="header">
+        <button class="btn-home" onclick="showView('home')">🏠 HOME</button>
+        <h1>GESTÃO CABINE</h1>
+    </div>
+
+    <div id="view-home">
+        <div class="menu-block" onclick="showView('sentado')"><span>📊</span>SUPERVISÓRIO LINHA</div>
+        <div class="menu-block" onclick="showView('rota-interna')"><span>🔄</span>ROTA INTERNA</div>
+        <div class="menu-block" onclick="showView('rota-externa')"><span>🚛</span>ROTA EXTERNA</div>
+        <div class="menu-block" onclick="showView('picking')"><span>📦</span>VISÃO PICKING</div>
+        <div class="menu-block" onclick="showView('programacao-ordens')"><span>📋</span>PROGRAMAÇÃO DE ORDENS</div>
+        <div class="menu-block" onclick="showView('historico')"><span>📜</span>HISTÓRICO GERAL</div>
+        <div class="menu-block" onclick="showView('reset-manual')"><span>⚙️</span>RESET MANUAL</div>
+        <div class="menu-block" onclick="showView('config-linhas')"><span>📏</span>CONFIG. LINHAS</div>
+        <div class="menu-block" onclick="showView('config-carros')"><span>🚜</span>CONFIG. CARROS</div>
+    </div>
+
+    <div id="view-reset-manual" class="view-container">
+        <div class="config-card">
+            <h2>Reset Manual de Status</h2>
+            <div class="reset-filters">
+                <input type="text" id="reset-filter-car" placeholder="Filtrar nº do carro" oninput="renderResetManual()">
+                <select id="reset-filter-line" onchange="renderResetManual()">
+                    <option value="">TODOS OS GRUPOS</option>
+                    <option value="CABBACKHOE">CABBACKHOE</option><option value="CABLOADER">CABLOADER</option><option value="CABGRADER">CABGRADER</option><option value="CABCRAWLER">CABCRAWLER</option>
+                    <option value="LINHABACKHOE">LINHABACKHOE</option><option value="LINHALOADER">LINHALOADER</option><option value="LINHAGRADER">LINHAGRADER</option><option value="LINHACRAWLER">LINHACRAWLER</option>
+                </select>
+                <button type="button" class="btn-reset-filter" onclick="document.getElementById('reset-filter-car').value='';document.getElementById('reset-filter-line').value='';renderResetManual();">LIMPAR FILTROS</button>
+            </div>
+            <div id="reset-manual-grid" class="reset-grid"></div>
+        </div>
+    </div>
+
+    <div id="view-sentado" class="view-container">
+        <div class="main-layout-supervisorio">
+            <div class="sup-column production-column" id="production-column">
+                <div class="sup-header production-header" style="background: var(--linha-l);">LINHA DE PRODUÇÃO
+                    <div class="production-zoom-controls" aria-label="Controles de zoom da linha de produção">
+                        <button type="button" class="production-zoom-btn" id="production-zoom-out" title="Diminuir zoom" aria-label="Diminuir zoom">−</button>
+                        <span class="production-zoom-value" id="production-zoom-value" aria-live="polite">100%</span>
+                        <button type="button" class="production-zoom-btn" id="production-zoom-in" title="Aumentar zoom" aria-label="Aumentar zoom">+</button>
+                        <button type="button" class="production-zoom-btn" id="production-zoom-reset" title="Ajustar à tela" aria-label="Ajustar à tela">↺</button>
+                    </div>
+                    <button type="button" class="production-fullscreen-btn" id="production-fullscreen-btn" onclick="toggleProductionFullscreen()">⛶ TELA CHEIA</button>
+                </div>
+                <div class="sup-content production-layout-content" id="production-layout-content">
+                    <div class="production-layout-viewport" id="production-layout-viewport">
+                        <div class="production-factory" id="map-root" aria-label="Mapa das linhas, postos e carros"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="sup-column" id="col-tenda">
+                <div class="sup-header" style="background: #475569;">TENDA (VT / CT)</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex-grow: 1; overflow: hidden; padding: 8px; background: #f8fafc;">
+                    <div style="display: flex; flex-direction: column; height: 100%; overflow: hidden; background: #ffffff; border: 1px solid var(--border-color); border-radius: 8px;">
+                        <div style="padding: 8px 10px; text-align: center; font-weight: 800; font-size: 11px; letter-spacing: 0.05em; background: var(--vt); color: white; border-radius: 6px 6px 0 0; text-transform: uppercase;" id="sup-title-vt">TENDA VT</div>
+                        <div class="sup-content" id="sup-tenda-vt-content" style="padding: 8px; overflow-y: auto; flex-grow: 1;"></div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; height: 100%; overflow: hidden; background: #ffffff; border: 1px solid var(--border-color); border-radius: 8px;">
+                        <div style="padding: 8px 10px; text-align: center; font-weight: 800; font-size: 11px; letter-spacing: 0.05em; background: var(--ct); color: white; border-radius: 6px 6px 0 0; text-transform: uppercase;" id="sup-title-ct">TENDA CT</div>
+                        <div class="sup-content" id="sup-tenda-ct-content" style="padding: 8px; overflow-y: auto; flex-grow: 1;"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="sup-column" id="col-wh">
+                <div class="sup-header" style="background: #1e3a8a;">WAREHOUSE (WHV / WHC)</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex-grow: 1; overflow: hidden; padding: 8px; background: #f8fafc;">
+                    <div style="display: flex; flex-direction: column; height: 100%; overflow: hidden; background: #ffffff; border: 1px solid var(--border-color); border-radius: 8px;">
+                        <div style="padding: 8px 10px; text-align: center; font-weight: 800; font-size: 11px; letter-spacing: 0.05em; background: var(--whv); color: white; border-radius: 6px 6px 0 0; text-transform: uppercase;" id="sup-title-whv">WAREHOUSE WHV</div>
+                        <div class="sup-content" id="sup-wh-whv-content" style="padding: 8px; overflow-y: auto; flex-grow: 1;"></div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; height: 100%; overflow: hidden; background: #ffffff; border: 1px solid var(--border-color); border-radius: 8px;">
+                        <div style="padding: 8px 10px; text-align: center; font-weight: 800; font-size: 11px; letter-spacing: 0.05em; background: var(--whc); color: white; border-radius: 6px 6px 0 0; text-transform: uppercase;" id="sup-title-whc">WAREHOUSE WHC</div>
+                        <div class="sup-content" id="sup-wh-whc-content" style="padding: 8px; overflow-y: auto; flex-grow: 1;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HISTÓRICO GERAL -->
+    <div id="view-historico" class="view-container">
+        <div class="config-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <h2>Histórico Geral de Movimentações</h2>
+                <button onclick="exportToExcel()" style="background: #059669; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 800;">📥 BAIXAR EXCEL</button>
+            </div>
+            <div class="table-responsive" style="max-height: 520px; overflow-y: auto;">
+                <table class="table-std" id="table-historico">
+                    <thead>
+                        <tr>
+                            <th>DATA / HORA</th>
+                            <th>CARRO</th>
+                            <th>WAREHOUSE</th>
+                            <th>LINHA</th>
+                            <th>STATUS ATRIBUÍDO</th>
+                            <th>SEQUENCIAL</th>
+                            <th>ORDEM</th>
+                            <th>LISTA</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historico-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+      <!-- ROTA INTERNA -->
+      <div id="view-rota-interna" class="view-container route-dashboard">
+          <div class="route-group-filter" id="route-internal-filter"><span class="route-filter-label">FILTRAR GRUPOS</span><button type="button" class="route-filter-btn route-filter-all" data-group="TODOS" onclick="selectAllRouteGroups('internal')">TODOS</button><button type="button" class="route-filter-btn" data-group="CABBACKHOE" onclick="toggleRouteGroupFilter('internal','CABBACKHOE')">CABBACKHOE</button><button type="button" class="route-filter-btn" data-group="CABLOADER" onclick="toggleRouteGroupFilter('internal','CABLOADER')">CABLOADER</button><button type="button" class="route-filter-btn" data-group="CABGRADER" onclick="toggleRouteGroupFilter('internal','CABGRADER')">CABGRADER</button><button type="button" class="route-filter-btn" data-group="CABCRAWLER" onclick="toggleRouteGroupFilter('internal','CABCRAWLER')">CABCRAWLER</button><button type="button" class="route-filter-btn" data-group="LINHABACKHOE" onclick="toggleRouteGroupFilter('internal','LINHABACKHOE')">LINHABACKHOE</button><button type="button" class="route-filter-btn" data-group="LINHALOADER" onclick="toggleRouteGroupFilter('internal','LINHALOADER')">LINHALOADER</button><button type="button" class="route-filter-btn" data-group="LINHAGRADER" onclick="toggleRouteGroupFilter('internal','LINHAGRADER')">LINHAGRADER</button><button type="button" class="route-filter-btn" data-group="LINHACRAWLER" onclick="toggleRouteGroupFilter('internal','LINHACRAWLER')">LINHACRAWLER</button></div>
+          <section class="route-section route-section-pickup">
+              <div class="route-section-header"><span>RETIRADA &nbsp; L → VT</span><span class="route-total" id="route-internal-l-total">0 carros</span></div>
+              <div class="route-line-grid" id="route-internal-l-groups"></div>
+          </section>
+          <section class="route-section route-section-delivery">
+              <div class="route-section-header"><span>ENTREGA &nbsp; CT → L</span><span class="route-total" id="route-internal-ct-total">0 carros</span></div>
+              <div class="route-line-grid" id="route-internal-ct-groups"></div>
+          </section>
+      </div>
+      <!-- ROTA EXTERNA -->
+      <div id="view-rota-externa" class="view-container route-dashboard">
+          <div class="route-group-filter" id="route-external-filter"><span class="route-filter-label">FILTRAR GRUPOS</span><button type="button" class="route-filter-btn route-filter-all" data-group="TODOS" onclick="selectAllRouteGroups('external')">TODOS</button><button type="button" class="route-filter-btn" data-group="CABBACKHOE" onclick="toggleRouteGroupFilter('external','CABBACKHOE')">CABBACKHOE</button><button type="button" class="route-filter-btn" data-group="CABLOADER" onclick="toggleRouteGroupFilter('external','CABLOADER')">CABLOADER</button><button type="button" class="route-filter-btn" data-group="CABGRADER" onclick="toggleRouteGroupFilter('external','CABGRADER')">CABGRADER</button><button type="button" class="route-filter-btn" data-group="CABCRAWLER" onclick="toggleRouteGroupFilter('external','CABCRAWLER')">CABCRAWLER</button><button type="button" class="route-filter-btn" data-group="LINHABACKHOE" onclick="toggleRouteGroupFilter('external','LINHABACKHOE')">LINHABACKHOE</button><button type="button" class="route-filter-btn" data-group="LINHALOADER" onclick="toggleRouteGroupFilter('external','LINHALOADER')">LINHALOADER</button><button type="button" class="route-filter-btn" data-group="LINHAGRADER" onclick="toggleRouteGroupFilter('external','LINHAGRADER')">LINHAGRADER</button><button type="button" class="route-filter-btn" data-group="LINHACRAWLER" onclick="toggleRouteGroupFilter('external','LINHACRAWLER')">LINHACRAWLER</button></div>
+          <section class="route-section route-section-whv">
+              <div class="route-section-header"><span>RECOLHA VAZIOS &nbsp; VT → WHV</span><span class="route-total" id="route-external-vt-total">0 carros</span></div>
+              <div class="route-line-grid" id="route-external-vt-groups"></div>
+          </section>
+          <section class="route-section route-section-whc">
+              <div class="route-section-header"><span>ENTREGA CHEIOS &nbsp; WHC → CT</span><span class="route-total" id="route-external-whc-total">0 carros</span></div>
+              <div class="route-line-grid" id="route-external-whc-groups"></div>
+          </section>
+      </div>
+    <!-- PICKING -->
+<div id="view-picking" class="view-container">
+<div class="picking-section"><div class="picking-section-label">CABINES (MONTAGEM)</div><div class="picking-dashboard-grid"><section class="picking-group" aria-labelledby="picking-title-cabloader">
+<h2 id="picking-title-cabloader" class="picking-group-title">CABBLOADER</h2>
+<div class="picking-block"><div class="picking-block-heading progress"><span class="picking-dot green"></span>EM ANDAMENTO (<span id="count-picking-andamento-cabloader">0</span>)</div><div class="picking-table-wrap"><table class="picking-table"><thead><tr><th>CARRO</th><th class="wh-col">WH</th><th class="process-col">PROCESSO</th></tr></thead><tbody id="picking-andamento-cabloader-body"></tbody></table></div></div>
+<div class="picking-block"><div class="picking-block-heading waiting"><span class="picking-dot red"></span>AGUARDANDO PICKING (<span id="count-picking-aguardando-cabloader">0</span>)</div><div class="picking-table-wrap"><table class="picking-table"><thead><tr><th class="rank-col">RANK</th><th>CARRO</th><th class="wh-col">WH</th><th class="process-col">PROCESSO</th></tr></thead><tbody id="picking-aguardando-cabloader-body"></tbody></table></div></div>
+</section><section class="picking-group" aria-labelledby="picking-title-cabbackhoe">
+<h2 id="picking-title-cabbackhoe" class="picking-group-title">CABBACKHOE</h2>
+<div class="picking-block"><div class="picking-block-heading progress"><span class="picking-dot green"></span>EM ANDAMENTO (<span id="count-picking-andamento-cabbackhoe">0</span>)</div><div class="picking-table-wrap"><table class="picking-table"><thead><tr><th>CARRO</th><th class="wh-col">WH</th><th class="process-col">PROCESSO</th></tr></thead><tbody id="picking-andamento-cabbackhoe-body"></tbody></table></div></div>
+<div class="picking-block"><div class="picking-block-heading waiting"><span class="picking-dot red"></span>AGUARDANDO PICKING (<span id="count-picking-aguardando-cabbackhoe">0</span>)</div><div class="picking-table-wrap"><table class="picking-table"><thead><tr><th class="rank-col">RANK</th><th>CARRO</th><th class="wh-col">WH</th><th class="process-col">PROCESSO</th></tr></thead><tbody id="picking-aguardando-cabbackhoe-body"></tbody></table></div></div>
+</section><section class="picking-group" aria-labelledby="picking-title-cabgrader">
+<h2 id="picking-title-cabgrader" class="picking-group-title">CABGRADER</h2>
+<div class="picking-block"><div class="picking-block-heading progress"><span class="picking-dot green"></span>EM ANDAMENTO (<span id="count-picking-andamento-cabgrader">0</span>)</div><div class="picking-table-wrap"><table class="picking-table"><thead><tr><th>CARRO</th><th class="wh-col">WH</th><th class="process-col">PROCESSO</th></tr></thead><tbody id="picking-andamento-cabgrader-body"></tbody></table></div></div>
+<div class="picking-block"><div class="picking-block-heading waiting"><span class="picking-dot red"></span>AGUARDANDO PICKING (<span id="count-picking-aguardando-cabgrader">0</span>)</div><div class="picking-table-wrap"><table class="picking-table"><thead><tr><th class="rank-col">RANK</th><th>CARRO</th><th class="wh-col">WH</th><th class="process-col">PROCESSO</th></tr></thead><tbody id="picking-aguardando-cabgrader-body"></tbody></table></div></div>
+</section><section class="picking-group" aria-labelledby="picking-title-cabcrawler">
+<h2 id="picking-title-cabcrawler" class="picking-group-title">CABCRAWLER</h2>
+<div class="picking-block"><div class="picking-block-heading progress"><span class="picking-dot green"></span>EM ANDAMENTO (<span id="count-picking-andamento-cabcrawler">0</span>)</div><div class="picking-table-wrap"><table class="picking-table"><thead><tr><th>CARRO</th><th class="wh-col">WH</th><th class="process-col">PROCESSO</th></tr></thead><tbody id="picking-andamento-cabcrawler-body"></tbody></table></div></div>
+<div class="picking-block"><div class="picking-block-heading waiting"><span class="picking-dot red"></span>AGUARDANDO PICKING (<span id="count-picking-aguardando-cabcrawler">0</span>)</div><div class="picking-table-wrap"><table class="picking-table"><thead><tr><th class="rank-col">RANK</th><th>CARRO</th><th class="wh-col">WH</th><th class="process-col">PROCESSO</th></tr></thead><tbody id="picking-aguardando-cabcrawler-body"></tbody></table></div></div>
+</section></div></div>
+<div class="picking-section"><div class="picking-section-label production">LINHAS (PRODUÇÃO)</div><div class="picking-dashboard-grid"><section class="picking-group" aria-labelledby="picking-title-linhabackhoe">
+<h2 id="picking-title-linhabackhoe" class="picking-group-title">LINHABACKHOE</h2>
+<div class="picking-block"><div class="picking-block-heading progress"><span class="picking-dot green"></span>EM ANDAMENTO (<span id="count-picking-andamento-linhabackhoe">0</span>)</div><div class="picking-table-wrap"><table class="picking-table"><thead><tr><th>CARRO</th><th class="wh-col">WH</th><th class="process-col">PROCESSO</th></tr></thead><tbody id="picking-andamento-linhabackhoe-body"></tbody></table></div></div>
+<div class="picking-block"><div class="picking-block-heading waiting"><span class="picking-dot red"></span>AGUARDANDO PICKING (<span id="count-picking-aguardando-linhabackhoe">0</span>)</div><div class="picking-table-wrap"><table class="picking-table"><thead><tr><th class="rank-col">RANK</th><th>CARRO</th><th class="wh-col">WH</th><th class="process-col">PROCESSO</th></tr></thead><tbody id="picking-aguardando-linhabackhoe-body"></tbody></table></div></div>
+</section><section class="picking-group" aria-labelledby="picking-title-linhaloader">
+<h2 id="picking-title-linhaloader" class="picking-group-title">LINHALOADER</h2>
+<div class="picking-block"><div class="picking-block-heading progress"><span class="picking-dot green"></span>EM ANDAMENTO (<span id="count-picking-andamento-linhaloader">0</span>)</div><div class="picking-table-wrap"><table class="picking-table"><thead><tr><th>CARRO</th><th class="wh-col">WH</th><th class="process-col">PROCESSO</th></tr></thead><tbody id="picking-andamento-linhaloader-body"></tbody></table></div></div>
+<div class="picking-block"><div class="picking-block-heading waiting"><span class="picking-dot red"></span>AGUARDANDO PICKING (<span id="count-picking-aguardando-linhaloader">0</span>)</div><div class="picking-table-wrap"><table class="picking-table"><thead><tr><th class="rank-col">RANK</th><th>CARRO</th><th class="wh-col">WH</th><th class="process-col">PROCESSO</th></tr></thead><tbody id="picking-aguardando-linhaloader-body"></tbody></table></div></div>
+</section><section class="picking-group" aria-labelledby="picking-title-linhagrader">
+<h2 id="picking-title-linhagrader" class="picking-group-title">LINHAGRADER</h2>
+<div class="picking-block"><div class="picking-block-heading progress"><span class="picking-dot green"></span>EM ANDAMENTO (<span id="count-picking-andamento-linhagrader">0</span>)</div><div class="picking-table-wrap"><table class="picking-table"><thead><tr><th>CARRO</th><th class="wh-col">WH</th><th class="process-col">PROCESSO</th></tr></thead><tbody id="picking-andamento-linhagrader-body"></tbody></table></div></div>
+<div class="picking-block"><div class="picking-block-heading waiting"><span class="picking-dot red"></span>AGUARDANDO PICKING (<span id="count-picking-aguardando-linhagrader">0</span>)</div><div class="picking-table-wrap"><table class="picking-table"><thead><tr><th class="rank-col">RANK</th><th>CARRO</th><th class="wh-col">WH</th><th class="process-col">PROCESSO</th></tr></thead><tbody id="picking-aguardando-linhagrader-body"></tbody></table></div></div>
+</section><section class="picking-group" aria-labelledby="picking-title-linhacrawler">
+<h2 id="picking-title-linhacrawler" class="picking-group-title">LINHACRAWLER</h2>
+<div class="picking-block"><div class="picking-block-heading progress"><span class="picking-dot green"></span>EM ANDAMENTO (<span id="count-picking-andamento-linhacrawler">0</span>)</div><div class="picking-table-wrap"><table class="picking-table"><thead><tr><th>CARRO</th><th class="wh-col">WH</th><th class="process-col">PROCESSO</th></tr></thead><tbody id="picking-andamento-linhacrawler-body"></tbody></table></div></div>
+<div class="picking-block"><div class="picking-block-heading waiting"><span class="picking-dot red"></span>AGUARDANDO PICKING (<span id="count-picking-aguardando-linhacrawler">0</span>)</div><div class="picking-table-wrap"><table class="picking-table"><thead><tr><th class="rank-col">RANK</th><th>CARRO</th><th class="wh-col">WH</th><th class="process-col">PROCESSO</th></tr></thead><tbody id="picking-aguardando-linhacrawler-body"></tbody></table></div></div>
+</section></div></div>
+<div class="picking-global-ranking">
+<div class="picking-global-ranking-header"><span>🏆 &nbsp;RANKING GERAL - AGUARDANDO PICKING</span><span>Total: <b id="picking-global-total">0</b> carro(s)</span></div>
+<div class="picking-global-ranking-body"><table class="picking-global-table"><thead><tr><th>#</th><th>Carro</th><th>Área</th><th>Equipamento</th><th>WH</th><th>Processo</th></tr></thead><tbody id="picking-global-ranking-body"></tbody></table></div>
+</div>
+</div>
+<!-- PROGRAMAÇÃO -->
+    <div id="view-programacao-ordens" class="view-container">
+        <div class="config-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <h2>Programação de Ordens (Importação Excel)</h2>
+                <div>
+                    <span class="badge-total">Total Importado: <span id="total-registros-prog">0</span> registros</span>
+                </div>
+            </div>
+            
+            <div class="prog-actions">
+                <input type="file" id="excel-file-inp" accept=".xlsx, .xls">
+                <button class="btn-finalizar" onclick="importarProgramacaoExcel()" style="background: #f59e0b; color: #0f172a;">📥 IMPORTAR EXCEL</button>
+                <button class="btn-danger" onclick="limparProgramacao()">🗑️ LIMPAR PROGRAMAÇÃO</button>
+                <input type="text" id="busca-programacao" placeholder="🔍 Buscar por Carro, Seq, Ordem, Lista..." oninput="filtrarProgramacao()" style="flex-grow: 1; min-width: 220px;">
+            </div>
+
+            <div class="table-responsive" style="max-height: 520px; overflow-y: auto; margin-top: 15px;">
+                <table class="table-std" id="table-programacao">
+                    <thead>
+                        <tr>
+                            <th>CARRO</th>
+                            <th>SEQUENCIAL</th>
+                            <th>ORDEM</th>
+                            <th>LISTA</th>
+                            <th>DATA/HORA DA IMPORTAÇÃO</th>
+                            <th>AÇÃO</th>
+                        </tr>
+                    </thead>
+                    <tbody id="programacao-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONFIGURAR CARROS -->
+    <div id="view-config-carros" class="view-container">
+        <div class="config-card">
+            <h2>Configurar Carros</h2>
+            <input type="number" id="car-id-inp" placeholder="Nº Carro">
+            <select id="car-wh-sel">
+                <option value="WH1">WH1</option>
+                <option value="WH2">WH2</option>
+            </select>
+            <select id="car-line-sel"></select>
+            <input type="number" id="car-ordens-inp" placeholder="Ordens">
+            <input type="number" id="car-fluxo-inp" placeholder="Fluxo">
+            <button class="btn-finalizar" onclick="saveCar()">SALVAR</button>
+            <div class="table-responsive">
+                <table class="table-std"><thead><tr><th>ID</th><th>WH</th><th>LINHA</th><th>ORDENS</th><th>FLUXO</th><th>AÇÃO</th></tr></thead><tbody id="table-carros-body"></tbody></table>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONFIGURAR LINHAS -->
+    <div id="view-config-linhas" class="view-container">
+        <div class="config-card">
+            <h2>Configurar Linhas</h2>
+            <input type="text" id="line-name-inp" placeholder="Linha">
+            <input type="number" id="line-takt-inp" placeholder="Takt Time">
+            <input type="number" id="line-shifts-inp" placeholder="Turnos">
+            <button class="btn-finalizar" onclick="saveLine()">SALVAR</button>
+            <div class="table-responsive">
+                <table class="table-std"><thead><tr><th>LINHA</th><th>TAKT</th><th>TURNOS</th><th>AÇÃO</th></tr></thead><tbody id="table-linhas-body"></tbody></table>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getDatabase, ref, onValue, update, set, remove, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+        const firebaseConfig = { databaseURL: "https://testekit-c93df-default-rtdb.firebaseio.com/" };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const refCars = ref(db, "cabine_v12_final");
+        const refLines = ref(db, "linhas_v12_config");
+        const refHist = ref(db, "historico_v12_movimentacoes");
+        const refProgramacao = ref(db, "programacao_ordens_v12");
+
+        let CARROS = {};
+        let LINHAS = {};
+        let DATA_HISTORICO = [];
+        let PROGRAMACAO_ORDENS = [];
+        let termoBuscaProgramacao = "";
+
+        function getCarWH(car) {
+            if (!car) return 'WH2';
+            if (car.wh) return car.wh;
+            return (car.id == 266 || car.id == 267) ? 'WH1' : 'WH2';
+        }
+
+        // FUNÇÕES DE NORMALIZAÇÃO, ORDENAÇÃO E ESCAPES
+        function normalizarNomeColuna(nome) {
+            if (!nome) return "";
+            return String(nome)
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .toLowerCase()
+                .replace(/[^a-z0-9]/g, " ")
+                .replace(/\s+/g, " ")
+                .trim();
+        }
+
+        function identificarColuna(colunas, tipo) {
+            for (const col of colunas) {
+                const n = normalizarNomeColuna(col);
+                if (tipo === 'carro') {
+                    if (n === 'numero do carro' || n === 'num carro' || n === 'no carro' || n === 'n carro' || n === 'carro' || n.includes('carro')) return col;
+                } else if (tipo === 'sequencial') {
+                    if (n === 'n sequencial' || n === 'no sequencial' || n === 'numero sequencial' || n === 'num sequencial' || n === 'sequencial' || n.includes('sequencial')) return col;
+                } else if (tipo === 'ordem') {
+                    if (n === 'ordem' || n === 'ordem de producao' || n === 'ordem producao' || n === 'op' || n.includes('ordem')) return col;
+                } else if (tipo === 'lista') {
+                    if (n === 'lista' || n === 'lista de separacao' || n === 'lista separacao' || n.includes('lista')) return col;
+                }
+            }
+            return null;
+        }
+
+        function normalizarNumeroCarro(valor) {
+            if (valor === undefined || valor === null) return "";
+            let s = String(valor).trim().replace(/^#/, '').trim();
+            const match = s.match(/^(\d+)/);
+            if (match) return match[1];
+            return s.replace(/\s+/g, "");
+        }
+
+        function extrairNumeroSequencial(val) {
+            if (val === undefined || val === null) return Infinity;
+            const str = String(val).trim();
+            if (str === "") return Infinity;
+            const match = str.match(/-?\d+(\.\d+)?/);
+            if (match) {
+                const num = parseFloat(match[0]);
+                return isNaN(num) ? Infinity : num;
+            }
+            return Infinity;
+        }
+
+        function compararSequencialAsc(a, b) {
+            const numA = extrairNumeroSequencial(a.sequencial);
+            const numB = extrairNumeroSequencial(b.sequencial);
+            if (numA !== numB) {
+                return numA - numB;
+            }
+            return String(a.sequencial || "").localeCompare(String(b.sequencial || ""), undefined, { numeric: true });
+        }
+
+        function escaparHTML(valor) {
+            if (valor === undefined || valor === null) return "-";
+            const str = String(valor).trim();
+            if (str === "") return "-";
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Distribuição inteligente e sequencial das ordens ao longo do ciclo operacional do carro
+        // Ordem do ciclo: CT (pronto entrega) -> WHC (cheio galpão) -> WHV (em picking) -> VT (vazio tenda)
+        function mapearProgramacaoPorCarro() {
+            const mapa = {};
+            const prioridadeStatus = { 'CT': 1, 'WHC': 2, 'WHV': 3, 'VT': 4, 'L': 5 };
+
+            Object.values(CARROS).forEach(car => {
+                const normId = normalizarNumeroCarro(car.id);
+                const progsCarro = PROGRAMACAO_ORDENS
+                    .filter(p => normalizarNumeroCarro(p.numeroCarro) === normId)
+                    .sort(compararSequencialAsc);
+
+                if (progsCarro.length === 0) return;
+
+                // Ordena os slots do carro pelo estágio mais adiantado no fluxo
+                const slotsAtivos = [];
+                for (let i = 0; i < car.fluxo; i++) {
+                    const st = car.status[i] || 'WHV';
+                    if (st === 'MANUT') continue;
+                    slotsAtivos.push({
+                        idx: i,
+                        status: st,
+                        prio: prioridadeStatus[st] || 99
+                    });
+                }
+
+                // Slots mais adiantados recebem as primeiras ordens
+                slotsAtivos.sort((a, b) => a.prio - b.prio || a.idx - b.idx);
+
+                slotsAtivos.forEach((slot, ordemIdx) => {
+                    const chave = `${normId}_${slot.idx}`;
+                    if (progsCarro[ordemIdx]) {
+                        mapa[chave] = progsCarro[ordemIdx];
+                    }
+                });
+            });
+
+            return mapa;
+        }
+
+        function obterProgramacaoUnicaDoCarro(numeroCarro, cartIdx) {
+            const norm = normalizarNumeroCarro(numeroCarro);
+            if (!norm) return null;
+            const mapa = mapearProgramacaoPorCarro();
+            const chave = `${norm}_${cartIdx !== undefined && cartIdx !== null ? cartIdx : 0}`;
+            if (mapa[chave]) return mapa[chave];
+
+            // Fallback: primeira ordem disponível
+            const progs = PROGRAMACAO_ORDENS
+                .filter(p => normalizarNumeroCarro(p.numeroCarro) === norm)
+                .sort(compararSequencialAsc);
+            return progs[0] || null;
+        }
+
+        // NAVEGAÇÃO
+        window.showView = (v) => {
+            if (v === 'config-linhas' || v === 'config-carros' || v === 'reset-manual') {
+                const senha = prompt("Digite a senha de acesso:");
+                if (senha !== 'JohnDeere2025') {
+                    alert("Acesso negado.");
+                    return;
+                }
+            }
+            document.getElementById('view-home').style.display = (v === 'home' ? 'flex' : 'none');
+            document.querySelectorAll('.view-container').forEach(c => c.style.display = 'none');
+            const target = document.getElementById('view-' + v);
+            if(target) target.style.display = 'block';
+            document.body.classList.toggle('picking-view-active', v === 'picking');
+            document.body.classList.toggle('route-view-active', v === 'rota-interna' || v === 'rota-externa');
+            const mainTitle = document.querySelector('.header h1');
+            if (mainTitle) mainTitle.textContent = (v === 'picking' ? 'GESTÃO CABINE | VISÃO PICKING' : 'GESTÃO CABINE');
+            if (v === 'sentado') requestAnimationFrame(() => requestAnimationFrame(ajustarNovoLayoutLinha));
+        };
+
+        // DATA/HORA ÚNICA DO HISTÓRICO - TIMEZONE OFICIAL DE SÃO PAULO
+        function formatarDataHoraHistorico(timestamp) {
+            return new Intl.DateTimeFormat('pt-BR', {
+                timeZone: 'America/Sao_Paulo',
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            }).format(new Date(timestamp)).replace(',', '');
+        }
+        window.mudarStatus = (id, idx, st) => {
+            const car = CARROS[id];
+            const prog = obterProgramacaoUnicaDoCarro(id, idx);
+            update(ref(db, `cabine_v12_final/${id}`), { [`status/${idx}`]: st, [`pickingActive/${idx}`]: false });
+            const novoItemHist = push(refHist);
+            set(novoItemHist, {
+                carro: `#${id} - C${idx+1}`,
+                warehouse: car ? getCarWH(car) : 'WH2',
+                linha: car ? car.desc : 'S/L',
+                status: st,
+                sequencial: prog ? prog.sequencial : '-',
+                ordem: prog ? prog.ordem : '-',
+                lista: prog ? prog.lista : '-',
+                timestamp: serverTimestamp()
+            });
+        };
+
+        // Função de conclusão imediata de entrega na linha (sem confirmação modal) com remoção automática da programação
+        window.concluirLinhaEremoverProgramacao = (id, idx) => {
+            const car = CARROS[id];
+            const prog = obterProgramacaoUnicaDoCarro(id, idx);
+
+            // 1. Atualiza status para 'L'
+            update(ref(db, `cabine_v12_final/${id}`), { [`status/${idx}`]: 'L', [`pickingActive/${idx}`]: false });
+
+            // 2. Remove automaticamente o item da programação de ordens no Firebase
+            if (prog && prog.firebaseKey) {
+                remove(ref(db, `programacao_ordens_v12/${prog.firebaseKey}`)).catch(err => {
+                    console.error("Erro ao remover da programação:", err);
+                });
+            }
+
+            // 3. Registra no histórico geral com Sequencial, Ordem e Lista
+            const novoItemHist = push(refHist);
+            set(novoItemHist, {
+                carro: `#${id} - C${idx+1}`,
+                warehouse: car ? getCarWH(car) : 'WH2',
+                linha: car ? car.desc : 'S/L',
+                status: 'L',
+                sequencial: prog ? prog.sequencial : '-',
+                ordem: prog ? prog.ordem : '-',
+                lista: prog ? prog.lista : '-',
+                timestamp: serverTimestamp()
+            });
+        };
+
+        window.exportToExcel = () => {
+            const ws = XLSX.utils.json_to_sheet(DATA_HISTORICO.map(h => {
+                let wh = 'WH2';
+                if (h.warehouse) {
+                    wh = h.warehouse;
+                } else if (h.carro) {
+                    const match = h.carro.match(/#(\d+)/);
+                    const carId = match ? match[1] : null;
+                    if (carId && CARROS[carId]) {
+                        wh = getCarWH(CARROS[carId]);
+                    } else {
+                        wh = (h.carro.includes('266') || h.carro.includes('267')) ? 'WH1' : 'WH2';
+                    }
+                }
+                return { 
+                    "DATA E HORA": h.timestamp ? formatarDataHoraHistorico(h.timestamp) : h.dataHora, 
+                    "CARRO": h.carro, 
+                    "WAREHOUSE": wh,
+                    "LINHA": h.linha, 
+                    "STATUS": h.status,
+                    "SEQUENCIAL": h.sequencial || '-',
+                    "ORDEM": h.ordem || '-',
+                    "LISTA": h.lista || '-'
+                };
+            }));
+            const wb = XLSX.utils.book_new(); 
+            XLSX.utils.book_append_sheet(wb, ws, "Histórico");
+            XLSX.writeFile(wb, "Historico_Gestao_Cabine.xlsx");
+        };
+
+        // FIREBASE LISTENERS
+        onValue(refHist, snap => {
+            const data = snap.val() || {};
+            DATA_HISTORICO = Object.values(data).sort((a,b) => b.timestamp - a.timestamp);
+            document.getElementById('historico-body').innerHTML = DATA_HISTORICO.map(h => {
+                let wh = 'WH2';
+                if (h.warehouse) {
+                    wh = h.warehouse;
+                } else if (h.carro) {
+                    const match = h.carro.match(/#(\d+)/);
+                    const carId = match ? match[1] : null;
+                    if (carId && CARROS[carId]) {
+                        wh = getCarWH(CARROS[carId]);
+                    } else {
+                        wh = (h.carro.includes('266') || h.carro.includes('267')) ? 'WH1' : 'WH2';
+                    }
+                }
+                return `<tr>
+                    <td>${h.timestamp ? formatarDataHoraHistorico(h.timestamp) : h.dataHora}</td>
+                    <td><b style="color:var(--primary);">${h.carro}</b></td>
+                    <td>${wh}</td>
+                    <td>${h.linha}</td>
+                    <td><span class="sup-badge" style="background:var(--${h.status && h.status.toLowerCase()==='l'?'linha-l':(h.status ? h.status.toLowerCase() : 'ct')})">${h.status}</span></td>
+                    <td><b>${escaparHTML(h.sequencial)}</b></td>
+                    <td><span style="font-family: monospace; color: #0284c7; font-weight: 700;">${escaparHTML(h.ordem)}</span></td>
+                    <td><span style="background:var(--bg-card-hover); padding: 3px 8px; border-radius: 4px; font-size: 12px; border: 1px solid var(--border-color); font-weight: 600;">${escaparHTML(h.lista)}</span></td>
+                </tr>`
+            }).join('');
+        });
+
+        onValue(refProgramacao, snap => {
+            const data = snap.val() || {};
+            PROGRAMACAO_ORDENS = Object.entries(data).map(([key, val]) => ({
+                firebaseKey: key,
+                numeroCarro: val.numeroCarro !== undefined ? String(val.numeroCarro).trim() : "",
+                sequencial: val.sequencial !== undefined ? String(val.sequencial).trim() : "",
+                ordem: val.ordem !== undefined ? String(val.ordem).trim() : "",
+                lista: val.lista !== undefined ? String(val.lista).trim() : "",
+                dataHoraImportacao: val.timestamp ? formatarDataHoraHistorico(val.timestamp) : (val.dataHoraImportacao || "-"),
+                timestamp: val.timestamp || 0
+            })).sort(compararSequencialAsc);
+
+            renderProgramacaoOrdens();
+            renderPicking();
+            renderRotaInterna();
+            renderRotaExterna();
+        });
+
+        window.toggleAndamento = (id, idx, currentVal, status) => {
+            if (status !== 'WHV' && status !== 'VT') return;
+
+            // Somente quando iniciar o picking
+            if (!currentVal) {
+                const car = CARROS[id];
+                const prog = obterProgramacaoUnicaDoCarro(id, idx);
+
+                const mensagem =
+`Confirmar início do picking deste carro?
+
+Carro: #${id}-C${idx + 1}
+Linha: ${car?.desc || '-'}
+Sequencial: ${prog?.sequencial || '-'}
+Ordem: ${prog?.ordem || '-'}
+Lista: ${prog?.lista || '-'}`;
+
+                const confirmado = confirm(mensagem);
+
+                if (!confirmado) {
+                    return;
+                }
+            }
+
+            update(
+                ref(db, `cabine_v12_final/${id}/pickingActive`),
+                { [idx]: !currentVal }
+            );
+        };
+        
+        window.saveLine = () => { 
+            const n = document.getElementById('line-name-inp').value; 
+            const t = parseInt(document.getElementById('line-takt-inp').value) || 1;
+            const s = parseInt(document.getElementById('line-shifts-inp').value) || 1;
+            if(n) set(ref(db, `linhas_v12_config/${n}`), { name: n, takt: t, shifts: s }); 
+        };
+
+        window.saveCar = () => {
+            const id = document.getElementById('car-id-inp').value;
+            const wh = document.getElementById('car-wh-sel').value || 'WH1';
+            const f = parseInt(document.getElementById('car-fluxo-inp').value) || 2;
+            const o = parseInt(document.getElementById('car-ordens-inp').value) || 1;
+            if(id) update(ref(db, `cabine_v12_final/${id}`), { id: parseInt(id), wh: wh, desc: document.getElementById('car-line-sel').value, ordens: o, fluxo: f, status: Array(f).fill("WHV"), pickingActive: Array(f).fill(false) });
+        };
+
+        window.delLine = (n) => remove(ref(db, `linhas_v12_config/${n}`));
+        window.delCar = (id) => remove(ref(db, `cabine_v12_final/${id}`));
+
+        // ALTERAÇÃO EXCLUSIVA: editar o Fluxo de um carro existente
+        window.editarFluxo = async (id) => {
+            const car = CARROS[id];
+
+            if (!car) {
+                alert("Carro não encontrado.");
+                return;
+            }
+
+            const fluxoAtual = Number(car.fluxo) || 0;
+            const valorInformado = prompt(
+                `Informe o novo Fluxo para o carro #${id}:`,
+                fluxoAtual
+            );
+
+            if (valorInformado === null) return;
+
+            const novoFluxo = Number(String(valorInformado).trim());
+
+            if (!Number.isInteger(novoFluxo) || novoFluxo < 1) {
+                alert("Informe um Fluxo válido, usando um número inteiro maior que zero.");
+                return;
+            }
+
+            if (novoFluxo === fluxoAtual) return;
+
+            const statusAtual = Array.isArray(car.status)
+                ? [...car.status]
+                : Object.keys(car.status || {})
+                    .sort((a, b) => Number(a) - Number(b))
+                    .map(chave => car.status[chave]);
+
+            const pickingAtual = Array.isArray(car.pickingActive)
+                ? [...car.pickingActive]
+                : Object.keys(car.pickingActive || {})
+                    .sort((a, b) => Number(a) - Number(b))
+                    .map(chave => car.pickingActive[chave]);
+
+            const novoStatus = statusAtual.slice(0, novoFluxo);
+            const novoPickingActive = pickingAtual.slice(0, novoFluxo);
+
+            while (novoStatus.length < novoFluxo) {
+                novoStatus.push("WHV");
+            }
+
+            while (novoPickingActive.length < novoFluxo) {
+                novoPickingActive.push(false);
+            }
+
+            try {
+                await update(ref(db, `cabine_v12_final/${id}`), {
+                    fluxo: novoFluxo,
+                    status: novoStatus,
+                    pickingActive: novoPickingActive
+                });
+            } catch (erro) {
+                console.error("Erro ao editar Fluxo:", erro);
+                alert("Não foi possível atualizar o Fluxo: " + erro.message);
+            }
+        };
+
+        onValue(refLines, snap => {
+            LINHAS = snap.val() || {};
+            const gruposFixos = ['CABBACKHOE','CABLOADER','CABGRADER','CABCRAWLER','LINHABACKHOE','LINHALOADER','LINHAGRADER','LINHACRAWLER'];
+            const nomesLinhas = [...new Set([...gruposFixos, ...Object.values(LINHAS).map(l => l.name).filter(Boolean)])];
+            document.getElementById('car-line-sel').innerHTML = nomesLinhas.map(nome => `<option value="${escaparHTML(nome)}">${escaparHTML(nome)}</option>`).join('');
+            document.getElementById('table-linhas-body').innerHTML = Object.values(LINHAS).map(l => `<tr><td>${l.name}</td><td>${l.takt}m</td><td>${l.shifts}</td><td><button class="btn-danger" style="padding:4px 10px;" onclick="delLine('${l.name}')">✖</button></td></tr>`).join('');
+        });
+
+        onValue(refCars, snap => {
+            CARROS = snap.val() || {};
+            renderMapa(); renderSupervisorio(); renderPicking(); renderRotaExterna(); renderRotaInterna(); renderResetManual();
+            document.getElementById('table-carros-body').innerHTML = Object.values(CARROS).sort((a,b)=>a.id-b.id).map(c => {
+                const wh = getCarWH(c);
+                return `<tr><td><b style="color:var(--primary);">#${c.id}</b></td><td>${wh}</td><td>${c.desc}</td><td>${c.ordens}</td><td>${c.fluxo}</td><td><button class="btn-finalizar" style="padding:4px 10px; margin-right:5px;" onclick="editarFluxo(${c.id})">Editar Fluxo</button><button class="btn-danger" style="padding:4px 10px;" onclick="delCar(${c.id})">✖</button></td></tr>`
+            }).join('');
+        });
+
+        // IMPORTAÇÃO E GESTÃO DE PROGRAMAÇÃO
+        window.importarProgramacaoExcel = () => {
+            const fileInput = document.getElementById('excel-file-inp');
+            const file = fileInput.files ? fileInput.files[0] : null;
+
+            if (!file) {
+                alert("Por favor, selecione um arquivo Excel (.xlsx ou .xls) para importar.");
+                return;
+            }
+
+            if (typeof XLSX === 'undefined') {
+                alert("Erro: Biblioteca SheetJS XLSX não foi carregada.");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+
+                    if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+                        alert("O arquivo Excel selecionado não contém planilhas.");
+                        return;
+                    }
+
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+                    if (!jsonData || jsonData.length === 0) {
+                        alert("A primeira planilha do arquivo está vazia.");
+                        return;
+                    }
+
+                    const colunasOriginais = Object.keys(jsonData[0]);
+                    const colCarro = identificarColuna(colunasOriginais, 'carro');
+                    const colSeq = identificarColuna(colunasOriginais, 'sequencial');
+                    const colOrdem = identificarColuna(colunasOriginais, 'ordem');
+                    const colLista = identificarColuna(colunasOriginais, 'lista');
+
+                    const faltantes = [];
+                    if (!colCarro) faltantes.push("NUMERO DO CARRO");
+                    if (!colSeq) faltantes.push("N° SEQUENCIAL");
+                    if (!colOrdem) faltantes.push("ORDEM");
+                    if (!colLista) faltantes.push("LISTA");
+
+                    if (faltantes.length > 0) {
+                        alert("Erro de Colunas Obrigatórias!\n\nAs seguintes colunas não foram identificadas:\n- " + faltantes.join("\n- ") + 
+                              "\n\nColunas encontradas no arquivo:\n" + colunasOriginais.join(", "));
+                        return;
+                    }
+
+                    const registrosValidos = [];
+
+                    jsonData.forEach((row, idx) => {
+                        const carroBruto = row[colCarro];
+                        const seqBruto = row[colSeq];
+                        const ordemBruta = row[colOrdem];
+                        const listaBruta = row[colLista];
+
+                        const isEmpty = (!carroBruto && !seqBruto && !ordemBruta && !listaBruta);
+                        if (isEmpty) return;
+
+                        const carroNorm = normalizarNumeroCarro(carroBruto);
+                        if (!carroNorm) return;
+
+                        registrosValidos.push({
+                            numeroCarro: carroNorm,
+                            sequencial: String(seqBruto || "").trim(),
+                            ordem: String(ordemBruta || "").trim(),
+                            lista: String(listaBruta || "").trim(),
+                            timestamp: serverTimestamp()
+                        });
+                    });
+
+                    if (registrosValidos.length === 0) {
+                        alert("Nenhum registro com número de carro válido foi encontrado.");
+                        return;
+                    }
+
+                    if (PROGRAMACAO_ORDENS.length > 0) {
+                        const confirmar = confirm(`Já existem ${PROGRAMACAO_ORDENS.length} registros cadastrados na programação.\n\nDeseja SUBSTITUIR toda a programação atual pelos ${registrosValidos.length} novos registros?`);
+                        if (!confirmar) return;
+                    }
+
+                    salvarProgramacaoFirebase(registrosValidos);
+                    fileInput.value = "";
+
+                } catch (err) {
+                    console.error("Erro ao processar Excel:", err);
+                    alert("Erro ao ler o arquivo Excel: " + err.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        };
+
+        function salvarProgramacaoFirebase(registros) {
+            const novoObjeto = {};
+            registros.forEach(reg => {
+                const newKey = push(refProgramacao).key;
+                novoObjeto[newKey] = reg;
+            });
+
+            set(refProgramacao, novoObjeto)
+                .then(() => {
+                    alert(`Sucesso! ${registros.length} registros de programação foram importados e salvos no Firebase.`);
+                })
+                .catch(err => {
+                    console.error("Erro ao salvar no Firebase:", err);
+                    alert("Erro ao salvar no Firebase: " + err.message);
+                });
+        }
+
+        window.excluirProgramacao = (key) => {
+            if (!key) return;
+            if (confirm("Deseja realmente excluir este registro de programação?")) {
+                remove(ref(db, `programacao_ordens_v12/${key}`))
+                    .catch(err => alert("Erro ao excluir: " + err.message));
+            }
+        };
+
+        window.limparProgramacao = () => {
+            if (PROGRAMACAO_ORDENS.length === 0) {
+                alert("A programação já está vazia.");
+                return;
+            }
+            if (confirm("ATENÇÃO: Deseja realmente excluir TODA a programação de ordens cadastrada?")) {
+                set(refProgramacao, null)
+                    .then(() => alert("Programação de ordens limpa com sucesso."))
+                    .catch(err => alert("Erro ao limpar programação: " + err.message));
+            }
+        };
+
+        window.filtrarProgramacao = () => {
+            const input = document.getElementById("busca-programacao");
+            termoBuscaProgramacao = (input ? input.value : "").toLowerCase().trim();
+            renderProgramacaoOrdens();
+        };
+
+        function renderProgramacaoOrdens() {
+            const tbody = document.getElementById("programacao-table-body");
+            const totalEl = document.getElementById("total-registros-prog");
+            if (totalEl) totalEl.textContent = PROGRAMACAO_ORDENS.length;
+            if (!tbody) return;
+
+            let lista = PROGRAMACAO_ORDENS;
+            if (termoBuscaProgramacao) {
+                lista = lista.filter(p => 
+                    p.numeroCarro.toLowerCase().includes(termoBuscaProgramacao) ||
+                    p.sequencial.toLowerCase().includes(termoBuscaProgramacao) ||
+                    p.ordem.toLowerCase().includes(termoBuscaProgramacao) ||
+                    p.lista.toLowerCase().includes(termoBuscaProgramacao)
+                );
+            }
+
+            if (lista.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 25px;">${PROGRAMACAO_ORDENS.length === 0 ? 'Nenhuma programação importada. Selecione um arquivo Excel acima.' : 'Nenhum registro encontrado para o termo pesquisado.'}</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = lista.map(p => `
+                <tr>
+                    <td><b style="color:var(--primary);">#${escaparHTML(p.numeroCarro)}</b></td>
+                    <td><b>${escaparHTML(p.sequencial)}</b></td>
+                    <td><span style="font-family: monospace; color: #0284c7; font-weight: 700;">${escaparHTML(p.ordem)}</span></td>
+                    <td><span style="background:var(--bg-card-hover); padding: 3px 8px; border-radius: 4px; font-size: 12px; border: 1px solid var(--border-color); font-weight: 600;">${escaparHTML(p.lista)}</span></td>
+                    <td style="color: var(--text-muted); font-size: 12px;">${escaparHTML(p.dataHoraImportacao)}</td>
+                    <td>
+                        <button class="btn-danger" onclick="excluirProgramacao('${p.firebaseKey}')">🗑️ Excluir</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // RENDERS DE TELAS
+        function renderResetManual() {
+            const grid = document.getElementById("reset-manual-grid");
+            const opts = ["WHV", "WHC", "VT", "CT", "L", "MANUT"];
+            const filtroCarro = (document.getElementById('reset-filter-car')?.value || '').replace(/^#/, '').trim().toLowerCase();
+            const filtroGrupo = (document.getElementById('reset-filter-line')?.value || '').trim();
+            const carrosFiltrados = Object.values(CARROS).filter(car => {
+                const atendeCarro = !filtroCarro || String(car.id ?? '').toLowerCase().includes(filtroCarro);
+                const atendeGrupo = !filtroGrupo || String(car.desc ?? '') === filtroGrupo;
+                return atendeCarro && atendeGrupo;
+            }).sort((a,b)=>a.id-b.id);
+            grid.innerHTML = carrosFiltrados.map(car => {
+                let rowsHtml = "";
+                for(let i=0; i < car.fluxo; i++) {
+                    const st = car.status[i];
+                    rowsHtml += `
+                        <div class="reset-item-row">
+                            <div class="status-indicator-bar bar-${st}"></div>
+                            <div class="reset-item-label">C${i+1}</div>
+                            <div class="reset-btn-group">
+                                ${opts.map(o => `
+                                    <button class="btn-opt ${st === o ? 'active-'+o : ''}" 
+                                        onclick="mudarStatus(${car.id}, ${i}, '${o}')">
+                                        ${o}
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+                return `<div class="reset-card"><div class="reset-card-header">#${car.id} <small>${car.desc}</small></div>${rowsHtml}</div>`;
+            }).join('');
+            if (!carrosFiltrados.length) grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:28px;background:#fff;border:1px solid var(--border-color);border-radius:10px;">Nenhum carro encontrado para os filtros selecionados.</div>';
+        }
+        // Expor a função para os eventos inline oninput/onchange/onclick do Reset Manual.
+        window.renderResetManual = renderResetManual;
+
+        let productionZoomFactor = 1;
+        const PRODUCTION_ZOOM_MIN = 0.6;
+        const PRODUCTION_ZOOM_MAX = 2.0;
+        const PRODUCTION_ZOOM_STEP = 0.1;
+
+        function atualizarIndicadorZoom() {
+            const value = document.getElementById('production-zoom-value');
+            if (value) value.textContent = Math.round(productionZoomFactor * 100) + '%';
+        }
+
+        function alterarZoomProducao(delta) {
+            productionZoomFactor = Math.min(PRODUCTION_ZOOM_MAX, Math.max(PRODUCTION_ZOOM_MIN, Number((productionZoomFactor + delta).toFixed(2))));
+            atualizarIndicadorZoom();
+            ajustarNovoLayoutLinha();
+        }
+
+        function resetarZoomProducao() {
+            productionZoomFactor = 1;
+            atualizarIndicadorZoom();
+            ajustarNovoLayoutLinha();
+        }
+
+        function ajustarNovoLayoutLinha() {
+            const viewport = document.getElementById('production-layout-viewport');
+            const factory = document.getElementById('map-root');
+            if (!viewport || !factory) return;
+            const BASE_W = 2048, BASE_H = 1365;
+            const vw = Math.max(1, viewport.clientWidth);
+            const vh = Math.max(1, viewport.clientHeight);
+            const escalaBase = Math.min(vw / BASE_W, vh / BASE_H);
+            const escala = escalaBase * productionZoomFactor;
+            const rw = BASE_W * escala, rh = BASE_H * escala;
+            factory.style.width = BASE_W + 'px';
+            factory.style.height = BASE_H + 'px';
+            factory.style.left = Math.max(0, (vw-rw)/2) + 'px';
+            factory.style.top = Math.max(0, (vh-rh)/2) + 'px';
+            factory.style.transformOrigin = 'top left';
+            factory.style.transform = `scale(${escala})`;
+            viewport.classList.toggle('zoom-active', productionZoomFactor > 1);
+            viewport.style.setProperty('--map-rendered-width', rw + 'px');
+            viewport.style.setProperty('--map-rendered-height', rh + 'px');
+        }
+
+        document.getElementById('production-zoom-in')?.addEventListener('click', () => alterarZoomProducao(PRODUCTION_ZOOM_STEP));
+        document.getElementById('production-zoom-out')?.addEventListener('click', () => alterarZoomProducao(-PRODUCTION_ZOOM_STEP));
+        document.getElementById('production-zoom-reset')?.addEventListener('click', resetarZoomProducao);
+        atualizarIndicadorZoom();
+
+        window.toggleProductionFullscreen = async () => {
+            const column = document.getElementById('production-column');
+            if (!column) return;
+            try {
+                if (!document.fullscreenElement) await column.requestFullscreen();
+                else await document.exitFullscreen();
+            } catch (erro) {
+                console.error('Nao foi possivel alternar a tela cheia:', erro);
+            }
+        };
+        document.addEventListener('fullscreenchange', () => {
+            const btn = document.getElementById('production-fullscreen-btn');
+            if (btn) btn.textContent = document.fullscreenElement ? '✕ SAIR DA TELA CHEIA' : '⛶ TELA CHEIA';
+            requestAnimationFrame(ajustarNovoLayoutLinha);
+        });
+        window.addEventListener('resize', ajustarNovoLayoutLinha);
+
+        function renderMapa() {
+            const root = document.getElementById('map-root');
+            if (!root) return;
+            root.innerHTML = '';
+            const titles = [
+  ['Cabine Backhoe e Loader',55,118,210],['Cabine Grader',485,165,210],['Linha Principal Backhoe',835,165,210],['Linha Principal Loader',1255,165,195],['Linha Principal Grader',1653,174,195],['Linha Principal Crawler',250,1151,210]
+];
+const stations = []; 
+const cards = [];
+const st = (name,x,y,w,h,kind='') => stations.push({name,x,y,w,h,kind});
+const car = (n,x,y,status='green') => cards.push({n:String(n).padStart(3,'0'),x,y,status});
+
+// Cabine Backhoe e Loader
+st('LC3010',58,205,116,66,'yellow');st('LC3010B',174,205,117,66,'yellow');st('LC3020',58,271,116,66,'yellow');st('LC3030',58,337,116,66,'yellow');st('LC3040',58,403,116,66,'yellow');st('LC30-Quality',58,469,116,66,'yellow');
+st('Qualidade Backhoe',58,535,233,60);st('Qualidade Loader',58,595,233,60);st('LC10-Quality',58,655,116,66);st('LC1040',58,721,116,66);st('LC1030',58,787,116,66);st('LC1020',58,853,116,66);st('LC1010',58,919,116,66);st('LC1010B',174,919,117,66);
+[[253,5,273],[258,5,340],[258,5,375],[255,5,409],[255,5,444],[256,5,523],[256,5,558],[367,5,720],[367,5,756],[262,5,847],[261,5,882],[259,5,918],[259,5,953],[260,294,207],[260,294,242],[264,177,273],[267,177,374],[367,294,469],[367,294,504],[388,177,720],[388,177,756],[266,177,786],[266,177,821]].forEach(v=>car(...v));
+
+// Cabine Grader
+st('LC4010',525,271,118,66);st('LC4020',525,337,118,66);st('LC4030',525,403,118,66);st('LC4040',525,469,118,66);st('TESTES',525,535,118,60,'test');
+[[23,648,244],[47,648,279],[92,648,314],[344,648,349],[345,648,384],[346,648,419],[293,648,454],[349,648,489],[347,648,524],[350,648,559]].forEach(v=>car(...v));
+
+// Backhoe
+['RE1010','RE1020','RE1030','RE1030','RE1040','RE1040','RE1050','RE1050'].forEach((n,i)=>st(n,872,271+i*66,118,66));st('TESTES',872,799,118,120,'test');
+[[4,820,278],[5,820,355],[6,820,389],[5,820,424],[147,820,459],[22,820,494],[9,820,529],[17,820,564],[16,820,599],[13,820,634],[455,820,669],[145,820,704],[14,820,774]].forEach(v=>car(...v));
+[[3,993,278],[451,993,313],[7,993,348],[2,993,383],[8,993,418],[15,993,453],[45,993,488],[96,993,523],[98,993,558],[447,993,593],[10,993,628],[11,993,663],[12,993,698],[446,993,733],[454,993,768],[29,993,803]].forEach(v=>car(...v));
+
+// Loader
+st('PC1010',1284,271,118,66);st('EIXO',1402,271,58,66);st('PC1020',1284,337,118,66);st('PC1030',1284,403,118,132);st('PC1040',1284,535,118,186);st('PC1050',1284,721,118,132);st('TESTES',1284,853,118,66,'test');
+[[86,1232,263],[32,1232,298],[33,1232,333],[89,1232,368],[87,1232,403],[102,1232,438],[519,1232,493],[424,1232,570],[419,1232,641]].forEach(v=>car(...v));
+[[99,1463,282],[35,1405,337],[34,1405,372],[87,1405,407],[122,1405,442],[31,1405,477],[101,1405,512],[85,1405,547],[104,1405,582],[390,1405,617],[105,1405,652],[106,1405,687],[107,1405,722],[51,1405,757],[111,1405,792],[120,1405,827],[121,1405,862]].forEach(v=>car(...v));
+
+// Grader topo e linha
+st('MN1050D',1694,35,118,118,'yellow');[[223,1642,29],[306,1642,64],[462,1817,3],[338,1817,38],[339,1817,73],[432,1817,108],[437,1817,143]].forEach(v=>car(...v));
+['MN1010','MN1020','MN1030','MN1040','MN1050','MN1060'].forEach((n,i)=>st(n,1694,271+i*66,118,66));st('MN1070',1694,667,118,186);st('TESTES',1694,853,118,66,'test');
+[[529,1642,273],[331,1642,329],[333,1642,364],[332,1642,399],[252,1642,535],[340,1642,570],[225,1642,605],[334,1642,654],[335,1642,790],[336,1642,847]].forEach(v=>car(...v));
+[[330,1815,271],[430,1815,326],[308,1815,361],[607,1815,465],[527,1815,520],[316,1815,653],[309,1815,723],[461,1815,758],[148,1815,793],[348,1815,846],[352,1815,881]].forEach(v=>car(...v));
+
+// Crawler horizontal
+['TE1010','TE1020','TE1030','TE1040'].forEach((n,i)=>st(n,466+i*233,1140,233,84));st('TESTES',1398,1140,294,84,'test');st('LC2010',1459,1224,294,83);st('LC2020',1753,1224,237,83);
+[[167,562,1104],[168,795,1104],[173,981,1104],[176,1046,1104],[179,1273,1104],[178,1366,1104],[166,532,1229],[155,595,1229],[159,785,1229],[170,837,1229],[174,984,1229],[175,1047,1229],[177,1278,1229],[154,1553,1310],[152,1605,1310],[153,1657,1310],[151,1877,1310],[150,1929,1310]].forEach(v=>car(...v));
+            [[1988,0,59,188],[1988,271,59,803],[1988,1140,59,225]].forEach(v=>{
+                const e=document.createElement('div'); e.className='layout-wall';
+                Object.assign(e.style,{left:v[0]+'px',top:v[1]+'px',width:v[2]+'px',height:v[3]+'px'}); root.appendChild(e);
+            });
+            function add(cls,text,x,y,w,h,extra=''){
+                const e=document.createElement('div'); e.className=cls+(extra?' '+extra:''); e.textContent=text;
+                Object.assign(e.style,{left:x+'px',top:y+'px',width:w+'px',height:h+'px'}); root.appendChild(e);
+            }
+            titles.forEach(t=>add('layout-line-title',t[0],t[1],t[2],t[3],50));
+            stations.forEach(s=>add('layout-station',s.name,s.x,s.y,s.w,s.h,s.kind));
+            cards.forEach(c=>{
+                const id=String(Number(c.n));
+                const carData=CARROS[id] || Object.values(CARROS).find(item=>String(item.id)===id);
+                const statuses=carData && Array.isArray(carData.status) ? carData.status : [];
+                const c1=statuses[0]==='L'; const c2=statuses[1]==='L';
+                const e=document.createElement('div'); e.className='layout-card'; e.style.left=c.x+'px'; e.style.top=c.y+'px';
+                e.innerHTML=`<div class="layout-card-number">#${c.n}</div><div class="layout-card-status"><span class="layout-ci"><span class="layout-lbl">C1</span><span class="layout-dot ${c1?'green':'red'}">${c1?'C':'V'}</span></span><span class="layout-ci"><span class="layout-lbl">C2</span><span class="layout-dot ${c2?'green':'red'}">${c2?'C':'V'}</span></span></div>`;
+                root.appendChild(e);
+            });
+            const legend=document.createElement('div'); legend.className='layout-legend'; legend.textContent='Planta Operacional • Postos e Carros'; root.appendChild(legend);
+            requestAnimationFrame(ajustarNovoLayoutLinha);
+        }
+
+        function renderSupervisorio() {
+            const vtDiv = document.getElementById("sup-tenda-vt-content");
+            const ctDiv = document.getElementById("sup-tenda-ct-content");
+            const whvDiv = document.getElementById("sup-wh-whv-content");
+            const whcDiv = document.getElementById("sup-wh-whc-content");
+
+            let cVT = 0, cCT = 0, cWHV = 0, cWHC = 0;
+            let hVT = "", hCT = "", hWHV = "", hWHC = "";
+
+            Object.values(CARROS).forEach(car => {
+                const totalL = car.status.filter(s => s === 'L').length;
+                const cardClass = totalL < 2 ? 'warning-blink' : '';
+
+                car.status.forEach((st, idx) => {
+                    if (st === 'VT') {
+                        cVT++;
+                        hVT += `<div class="sup-card" style="border-left-color:var(--vt)"><span>#${car.id}-C${idx+1} <br><small>${car.desc}</small></span><span class="sup-badge" style="background:var(--vt)">VT</span></div>`;
+                    } else if (st === 'CT') {
+                        hCT += `<div class="sup-card ${cardClass}" style="border-left-color:var(--ct)"><span>#${car.id}-C${idx+1} <br><small>${car.desc}</small></span><span class="sup-badge" style="background:var(--ct)">CT</span></div>`;
+                    } else if (st === 'WHV') {
+                        cWHV++;
+                        hWHV += `<div class="sup-card" style="border-left-color:var(--whv)"><span>#${car.id}-C${idx+1} <br><small>${car.desc}</small></span><span class="sup-badge" style="background:var(--whv)">WHV</span></div>`;
+                    } else if (st === 'WHC') {
+                        hWHC += `<div class="sup-card ${cardClass}" style="border-left-color:var(--whc)"><span>#${car.id}-C${idx+1} <br><small>${car.desc}</small></span><span class="sup-badge" style="background:var(--whc)">WHC</span></div>`;
+                    }
+                });
+            });
+
+            if (vtDiv) vtDiv.innerHTML = hVT || `<div style="text-align:center; color:var(--text-muted); padding:10px; font-size:12px;">Nenhum</div>`;
+            if (ctDiv) ctDiv.innerHTML = hCT || `<div style="text-align:center; color:var(--text-muted); padding:10px; font-size:12px;">Nenhum</div>`;
+            if (whvDiv) whvDiv.innerHTML = hWHV || `<div style="text-align:center; color:var(--text-muted); padding:10px; font-size:12px;">Nenhum</div>`;
+            if (whcDiv) whcDiv.innerHTML = hWHC || `<div style="text-align:center; color:var(--text-muted); padding:10px; font-size:12px;">Nenhum</div>`;
+
+            const colTenda = document.getElementById("col-tenda");
+            const colWh = document.getElementById("col-wh");
+            if (colTenda) colTenda.classList.toggle("alert-blink", cVT >= 2);
+            if (colWh) colWh.classList.toggle("alert-blink", cWHV >= 2);
+        }
+
+        function renderPicking() {
+            const grupos = [
+                ['CABBLOADER','cabloader'], ['CABBACKHOE','cabbackhoe'], ['CABGRADER','cabgrader'], ['CABCRAWLER','cabcrawler'],
+                ['LINHABACKHOE','linhabackhoe'], ['LINHALOADER','linhaloader'], ['LINHAGRADER','linhagrader'], ['LINHACRAWLER','linhacrawler']
+            ];
+            const elementos = {};
+            grupos.forEach(([nome, slug]) => {
+                elementos[nome] = {
+                    andamentoBody: document.getElementById(`picking-andamento-${slug}-body`),
+                    aguardandoBody: document.getElementById(`picking-aguardando-${slug}-body`),
+                    countAndamento: document.getElementById(`count-picking-andamento-${slug}`),
+                    countAguardando: document.getElementById(`count-picking-aguardando-${slug}`)
+                };
+            });
+            let tasksAndamento = [];
+            let carrosAguardandoMap = {};
+            Object.values(CARROS).forEach(car => {
+                const wh = getCarWH(car);
+                const statuses = Array.isArray(car.status) ? car.status : Object.keys(car.status || {}).sort((a,b)=>Number(a)-Number(b)).map(k=>car.status[k]);
+                const cartsCheiosReais = statuses.filter(s => s === 'L' || s === 'CT' || s === 'WHC').length;
+                const cartsEmAndamento = statuses.reduce((total, status, idx) => {
+                    const estaEmAndamento = car.pickingActive?.[idx] === true;
+                    const aindaNaoEstaCheio = status !== 'L' && status !== 'CT' && status !== 'WHC';
+                    return total + (estaEmAndamento && aindaNaoEstaCheio ? 1 : 0);
+                }, 0);
+                const ordensPorCart = Number(car.ordens) || 0;
+                const cobertura = (cartsCheiosReais + cartsEmAndamento) * ordensPorCart;
+                statuses.forEach((st, idx) => {
+                    if (st === 'WHV') {
+                        const prog = obterProgramacaoUnicaDoCarro(car.id, idx);
+                        const item = { id:car.id, line:car.desc, idx, status:st, wh, prog, isActive:car.pickingActive?.[idx] === true };
+                        if (!carrosAguardandoMap[car.id]) carrosAguardandoMap[car.id] = { car, id:car.id, cobertura, carts:[] };
+                        carrosAguardandoMap[car.id].carts.push(item);
+                        if (item.isActive) tasksAndamento.push(item);
+                    }
+                });
+            });
+            const listaCarrosAguardando = Object.values(carrosAguardandoMap).map(grupo => {
+                let minSeq = Infinity;
+                const normId = normalizarNumeroCarro(grupo.id);
+                PROGRAMACAO_ORDENS.forEach(p => {
+                    if (normalizarNumeroCarro(p.numeroCarro) === normId) {
+                        const seqNum = extrairNumeroSequencial(p.sequencial);
+                        if (seqNum < minSeq) minSeq = seqNum;
+                    }
+                });
+                return { ...grupo, minSeq };
+            });
+            listaCarrosAguardando.sort((a,b) => {
+                if (a.cobertura !== b.cobertura) return a.cobertura - b.cobertura;
+                if (a.minSeq !== b.minSeq) return a.minSeq - b.minSeq;
+                return (parseInt(normalizarNumeroCarro(a.id),10)||0) - (parseInt(normalizarNumeroCarro(b.id),10)||0);
+            });
+            listaCarrosAguardando.forEach(g => g.carts.sort((a,b)=>a.idx-b.idx));
+            const filaBase = [];
+            const maxCarts = listaCarrosAguardando.reduce((m,g)=>Math.max(m,g.carts.length),0);
+            for (let rodada=0; rodada<maxCarts; rodada++) listaCarrosAguardando.forEach(g => { if (g.carts[rodada]) filaBase.push(g.carts[rodada]); });
+            const tasksAguardando = filaBase.filter(item => !item.isActive).map((item,index)=>({...item,globalRank:index+1}));
+
+            const globalBody = document.getElementById('picking-global-ranking-body');
+            const globalTotal = document.getElementById('picking-global-total');
+            if(globalTotal) globalTotal.textContent = tasksAguardando.length;
+            if(globalBody) globalBody.innerHTML = tasksAguardando.length ? tasksAguardando.map(t=>{const area=String(t.line||'').startsWith('CAB')?'Cabines (Montagem)':'Linhas (Produção)';return `<tr><td>${t.globalRank}</td><td><b>#${t.id}-C${t.idx+1}</b></td><td>${area}</td><td>${escaparHTML(t.line)}</td><td>${t.wh}</td><td><button class="btn-picking" onclick="toggleAndamento(${t.id},${t.idx},false,'${t.status}')">INICIAR</button><button class="btn-finalizar" disabled onclick="mudarStatus(${t.id},${t.idx},'WHC')">FINALIZAR</button></td></tr>`}).join('') : `<tr><td colspan="6" class="picking-empty">Sem carros aguardando picking</td></tr>`;
+            grupos.forEach(([nome]) => {
+                const destino = elementos[nome];
+                if (!destino?.andamentoBody || !destino?.aguardandoBody || !destino?.countAndamento || !destino?.countAguardando) return;
+                const andamentoLinhaCompleta = tasksAndamento.filter(item => item.line === nome);
+                  const aguardandoLinhaCompleta = tasksAguardando.filter(item => item.line === nome);
+                  const andamentoLinha = andamentoLinhaCompleta;
+                  const aguardandoLinha = aguardandoLinhaCompleta;
+                  const excedenteAndamento = 0;
+                  const excedenteAguardando = 0;
+                destino.countAndamento.textContent = andamentoLinha.length;
+                destino.countAguardando.textContent = aguardandoLinha.length;
+                destino.andamentoBody.innerHTML = andamentoLinha.length === 0
+                    ? `<tr><td colspan="4" class="picking-empty">Sem carros</td></tr>`
+                    : andamentoLinha.map(t => `<tr class="row-in-progress"><td><b style="color:var(--primary);">#${t.id}-C${t.idx+1}</b></td><td class="wh-col">${t.wh}</td><td class="status-col"><span class="sup-badge" style="background:var(--${t.status.toLowerCase()})">${t.status}</span></td><td class="process-col"><button class="btn-picking" style="background:#f59e0b;color:#0f172a;" onclick="toggleAndamento(${t.id},${t.idx},true,'${t.status}')">⏸ PARAR</button><button class="btn-picking btn-finalizar" onclick="mudarStatus(${t.id},${t.idx},'WHC')">✔ FINALIZAR</button></td></tr>`).join('') + (excedenteAndamento ? `<tr class="picking-overflow-row"><td colspan="4">+${excedenteAndamento} em andamento</td></tr>` : '');
+                destino.aguardandoBody.innerHTML = aguardandoLinha.length === 0
+                    ? `<tr><td colspan="5" class="picking-empty">Sem carros</td></tr>`
+                    : aguardandoLinha.map(t => `<tr><td class="rank-col"><span class="badge-rank">${t.globalRank}º</span></td><td><b>#${t.id}-C${t.idx+1}</b></td><td class="wh-col">${t.wh}</td><td class="status-col"><span class="sup-badge" style="background:var(--${t.status.toLowerCase()})">${t.status}</span></td><td class="process-col"><button class="btn-picking" style="background:#f59e0b;color:#0f172a;" onclick="toggleAndamento(${t.id},${t.idx},false,'${t.status}')">▶ INICIAR</button><button class="btn-picking btn-finalizar" disabled onclick="mudarStatus(${t.id},${t.idx},'WHC')">✔ FINALIZAR</button></td></tr>`).join('') + (excedenteAguardando ? `<tr class="picking-overflow-row"><td colspan="5">+${excedenteAguardando} aguardando • veja ranking geral</td></tr>` : '');
+            });
+        }
+
+        const ROUTE_FILTER_GROUPS = ['CABBACKHOE','CABLOADER','CABGRADER','CABCRAWLER','LINHABACKHOE','LINHALOADER','LINHAGRADER','LINHACRAWLER'];
+        function getRouteGroupFilter(route) {
+            const key = `gestaoCabine.routeFilter.${route}`;
+            try {
+                const saved = JSON.parse(localStorage.getItem(key));
+                if (Array.isArray(saved)) {
+                    const valid = saved.filter(group => ROUTE_FILTER_GROUPS.includes(group));
+                    if (valid.length) return valid;
+                }
+            } catch (e) {}
+            return [...ROUTE_FILTER_GROUPS];
+        }
+        function saveRouteGroupFilter(route, groups) {
+            localStorage.setItem(`gestaoCabine.routeFilter.${route}`, JSON.stringify(groups));
+        }
+        function updateRouteFilterButtons(route, selected) {
+            const filter = document.getElementById(`route-${route}-filter`);
+            if (!filter) return;
+            const allSelected = selected.length === ROUTE_FILTER_GROUPS.length;
+            filter.querySelectorAll('.route-filter-btn').forEach(button => {
+                const group = button.dataset.group;
+                button.classList.toggle('active', group === 'TODOS' ? allSelected : selected.includes(group));
+                button.setAttribute('aria-pressed', button.classList.contains('active') ? 'true' : 'false');
+            });
+        }
+
+        function applyRouteGroupLayout(grid, count) {
+            if (!grid) return;
+            grid.classList.remove('route-groups-1','route-groups-2','route-groups-3','route-groups-4','route-groups-many');
+            const layoutClass = count >= 5 ? 'route-groups-many' : `route-groups-${Math.max(1, count)}`;
+            grid.classList.add(layoutClass);
+            grid.dataset.visibleCount = count;
+        }
+
+        window.selectAllRouteGroups = function(route) {
+            saveRouteGroupFilter(route, [...ROUTE_FILTER_GROUPS]);
+            route === 'internal' ? renderRotaInterna() : renderRotaExterna();
+        };
+        window.toggleRouteGroupFilter = function(route, group) {
+            let selected = getRouteGroupFilter(route);
+            selected = selected.includes(group) ? selected.filter(item => item !== group) : [...selected, group];
+            if (!selected.length) selected = [...ROUTE_FILTER_GROUPS];
+            saveRouteGroupFilter(route, selected);
+            route === 'internal' ? renderRotaInterna() : renderRotaExterna();
+        };
+
+          function renderRotaExterna() {
+              const gridVT = document.getElementById("route-external-vt-groups");
+              const gridWHC = document.getElementById("route-external-whc-groups");
+              if (!gridVT || !gridWHC) return;
+              const grupos = ['CABBACKHOE','CABLOADER','CABGRADER','CABCRAWLER','LINHABACKHOE','LINHALOADER','LINHAGRADER','LINHACRAWLER'];
+              const gruposVisiveis = getRouteGroupFilter('external');
+              updateRouteFilterButtons('external', gruposVisiveis);
+              let itemsVT = [];
+              let itemsWHC = [];
+              Object.values(CARROS).forEach(c => {
+                  const totalL = c.status.filter(s => s === 'L').length;
+                  const rowClass = totalL < 2 ? 'warning-blink' : '';
+                  const wh = getCarWH(c);
+                  c.status.forEach((st, i) => {
+                      const prog = obterProgramacaoUnicaDoCarro(c.id, i);
+                      if (st === 'VT') itemsVT.push({ id:c.id, idx:i, wh, desc:c.desc });
+                      else if (st === 'WHC') itemsWHC.push({ id:c.id, idx:i, wh, desc:c.desc, prog, rowClass });
+                  });
+              });
+              itemsVT.sort((a,b) => a.id - b.id || a.idx - b.idx);
+              itemsWHC.sort((a,b) => {
+                  const seqA = a.prog ? extrairNumeroSequencial(a.prog.sequencial) : Infinity;
+                  const seqB = b.prog ? extrairNumeroSequencial(b.prog.sequencial) : Infinity;
+                  return seqA - seqB;
+              });
+              const totalVT = document.getElementById('route-external-vt-total');
+              const totalWHC = document.getElementById('route-external-whc-total');
+              const itemsVTVisiveis = itemsVT.filter(item => gruposVisiveis.includes(item.desc));
+              const itemsWHCVisiveis = itemsWHC.filter(item => gruposVisiveis.includes(item.desc));
+              if (totalVT) totalVT.textContent = `${itemsVTVisiveis.length} ${itemsVT.length === 1 ? 'carro' : 'carros'}`;
+              if (totalWHC) totalWHC.textContent = `${itemsWHCVisiveis.length} ${itemsWHC.length === 1 ? 'carro' : 'carros'}`;
+              applyRouteGroupLayout(gridVT, gruposVisiveis.length);
+              applyRouteGroupLayout(gridWHC, gruposVisiveis.length);
+              gridVT.innerHTML = gruposVisiveis.map(grupo => {
+                  const lista = itemsVT.filter(item => item.desc === grupo);
+                  const linhas = lista.length ? lista.map(item => `<tr><td><b>#${item.id}-C${item.idx+1}</b></td><td>${item.wh}</td><td><button class="btn-finalizar" style="background:var(--whv);color:#fff;" onclick="mudarStatus(${item.id},${item.idx},'WHV')">→ WHV</button></td></tr>`).join('') : `<tr><td colspan="3" class="route-empty">Nenhum carro nesta rota</td></tr>`;
+                  return `<article class="route-line-card"><header class="route-line-card-header"><span>${grupo}</span><span class="route-line-count">${lista.length} ${lista.length === 1 ? 'carro' : 'carros'}</span></header><div class="route-table-frame"><div class="route-table-head"><table class="route-line-table route-cols-3"><colgroup><col><col><col></colgroup><thead><tr><th>CARRO</th><th>WH</th><th>AÇÃO</th></tr></thead></table></div><div class="route-table-body"><table class="route-line-table route-cols-3"><colgroup><col><col><col></colgroup><tbody>${linhas}</tbody></table></div></div></article>`;
+              }).join('');
+              gridWHC.innerHTML = gruposVisiveis.map(grupo => {
+                  const lista = itemsWHC.filter(item => item.desc === grupo);
+                  const linhas = lista.length ? lista.map(item => {
+                      const colSeq = item.prog ? escaparHTML(item.prog.sequencial) : '-';
+                      const colOrdem = item.prog ? `<span style="font-family:monospace;color:#0284c7;font-weight:700;">${escaparHTML(item.prog.ordem)}</span>` : '-';
+                      const colLista = item.prog ? escaparHTML(item.prog.lista) : '-';
+                      return `<tr class="${item.rowClass}"><td><b>#${item.id}-C${item.idx+1}</b></td><td>${item.wh}</td><td><b>${colSeq}</b></td><td>${colOrdem}</td><td>${colLista}</td><td><button class="btn-finalizar" style="background:var(--whc);color:#fff;" onclick="mudarStatus(${item.id},${item.idx},'CT')">→ CT</button></td></tr>`;
+                  }).join('') : `<tr><td colspan="6" class="route-empty">Nenhum carro nesta rota</td></tr>`;
+                  return `<article class="route-line-card"><header class="route-line-card-header"><span>${grupo}</span><span class="route-line-count">${lista.length} ${lista.length === 1 ? 'carro' : 'carros'}</span></header><div class="route-table-frame"><div class="route-table-head"><table class="route-line-table route-cols-6"><colgroup><col><col><col><col><col><col></colgroup><thead><tr><th>CARRO</th><th>WH</th><th>SEQUENCIAL</th><th>ORDEM</th><th>LISTA</th><th>AÇÃO</th></tr></thead></table></div><div class="route-table-body"><table class="route-line-table route-cols-6"><colgroup><col><col><col><col><col><col></colgroup><tbody>${linhas}</tbody></table></div></div></article>`;
+              }).join('');
+          }
+          function renderRotaInterna() {
+              const gridL = document.getElementById("route-internal-l-groups");
+              const gridCT = document.getElementById("route-internal-ct-groups");
+              if (!gridL || !gridCT) return;
+              const grupos = ['CABBACKHOE','CABLOADER','CABGRADER','CABCRAWLER','LINHABACKHOE','LINHALOADER','LINHAGRADER','LINHACRAWLER'];
+              const gruposVisiveis = getRouteGroupFilter('internal');
+              updateRouteFilterButtons('internal', gruposVisiveis);
+              let itemsL = [];
+              let itemsCT = [];
+              Object.values(CARROS).forEach(c => {
+                  const totalL = c.status.filter(s => s === 'L').length;
+                  const rowClass = totalL < 2 ? 'warning-blink' : '';
+                  const wh = getCarWH(c);
+                  c.status.forEach((st, i) => {
+                      const prog = obterProgramacaoUnicaDoCarro(c.id, i);
+                      if (st === 'L') itemsL.push({ id:c.id, idx:i, wh, desc:c.desc, rowClass });
+                      else if (st === 'CT') itemsCT.push({ id:c.id, idx:i, wh, desc:c.desc, prog, rowClass });
+                  });
+              });
+              itemsL.sort((a,b) => a.id - b.id || a.idx - b.idx);
+              itemsCT.sort((a,b) => {
+                  const seqA = a.prog ? extrairNumeroSequencial(a.prog.sequencial) : Infinity;
+                  const seqB = b.prog ? extrairNumeroSequencial(b.prog.sequencial) : Infinity;
+                  return seqA - seqB;
+              });
+              const totalL = document.getElementById('route-internal-l-total');
+              const totalCT = document.getElementById('route-internal-ct-total');
+              const itemsLVisiveis = itemsL.filter(item => gruposVisiveis.includes(item.desc));
+              const itemsCTVisiveis = itemsCT.filter(item => gruposVisiveis.includes(item.desc));
+              if (totalL) totalL.textContent = `${itemsLVisiveis.length} ${itemsL.length === 1 ? 'carro' : 'carros'}`;
+              if (totalCT) totalCT.textContent = `${itemsCTVisiveis.length} ${itemsCT.length === 1 ? 'carro' : 'carros'}`;
+              applyRouteGroupLayout(gridL, gruposVisiveis.length);
+              applyRouteGroupLayout(gridCT, gruposVisiveis.length);
+              gridL.innerHTML = gruposVisiveis.map(grupo => {
+                  const lista = itemsL.filter(item => item.desc === grupo);
+                  const linhas = lista.length ? lista.map(item => `<tr class="${item.rowClass}"><td><b>#${item.id}-C${item.idx+1}</b></td><td>${item.wh}</td><td><button class="btn-finalizar" style="background:var(--vt);color:#fff;" onclick="mudarStatus(${item.id},${item.idx},'VT')">→ VT</button></td></tr>`).join('') : `<tr><td colspan="3" class="route-empty">Nenhum carro nesta rota</td></tr>`;
+                  return `<article class="route-line-card"><header class="route-line-card-header"><span>${grupo}</span><span class="route-line-count">${lista.length} ${lista.length === 1 ? 'carro' : 'carros'}</span></header><div class="route-table-frame"><div class="route-table-head"><table class="route-line-table route-cols-3"><colgroup><col><col><col></colgroup><thead><tr><th>CARRO</th><th>WH</th><th>AÇÃO</th></tr></thead></table></div><div class="route-table-body"><table class="route-line-table route-cols-3"><colgroup><col><col><col></colgroup><tbody>${linhas}</tbody></table></div></div></article>`;
+              }).join('');
+              gridCT.innerHTML = gruposVisiveis.map(grupo => {
+                  const lista = itemsCT.filter(item => item.desc === grupo);
+                  const linhas = lista.length ? lista.map(item => {
+                      const colSeq = item.prog ? escaparHTML(item.prog.sequencial) : '-';
+                      const colOrdem = item.prog ? `<span style="font-family:monospace;color:#0284c7;font-weight:700;">${escaparHTML(item.prog.ordem)}</span>` : '-';
+                      const colLista = item.prog ? escaparHTML(item.prog.lista) : '-';
+                      return `<tr class="${item.rowClass}"><td><b>#${item.id}-C${item.idx+1}</b></td><td>${item.wh}</td><td><b>${colSeq}</b></td><td>${colOrdem}</td><td>${colLista}</td><td><button class="btn-finalizar" style="background:var(--linha-l);color:#fff;" onclick="concluirLinhaEremoverProgramacao(${item.id},${item.idx})">→ LINHA</button></td></tr>`;
+                  }).join('') : `<tr><td colspan="6" class="route-empty">Nenhum carro nesta rota</td></tr>`;
+                  return `<article class="route-line-card"><header class="route-line-card-header"><span>${grupo}</span><span class="route-line-count">${lista.length} ${lista.length === 1 ? 'carro' : 'carros'}</span></header><div class="route-table-frame"><div class="route-table-head"><table class="route-line-table route-cols-6"><colgroup><col><col><col><col><col><col></colgroup><thead><tr><th>CARRO</th><th>WH</th><th>SEQUENCIAL</th><th>ORDEM</th><th>LISTA</th><th>AÇÃO</th></tr></thead></table></div><div class="route-table-body"><table class="route-line-table route-cols-6"><colgroup><col><col><col><col><col><col></colgroup><tbody>${linhas}</tbody></table></div></div></article>`;
+              }).join('');
+          }
+    </script>
+</body>
+</html>
