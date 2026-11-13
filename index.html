@@ -499,7 +499,7 @@
         .production-fullscreen-btn:hover { background:rgba(255,255,255,.28); }
         .production-layout-content { position:relative; overflow:auto; padding:8px; background:#eef2f6; }
         .production-layout-viewport { width:100%; min-height:100%; overflow:auto; }
-        .production-factory { position:relative; width:2048px; height:1365px; background-color:#fff; background-image:radial-gradient(#e2e8f0 1px,transparent 1px); background-size:24px 24px; border:1px solid #cbd5e1; border-radius:8px; transform-origin:top left; }
+        .production-factory { position:relative; width:2048px; height:1319px; background-color:#fff; background-image:radial-gradient(#e2e8f0 1px,transparent 1px); background-size:24px 24px; border:1px solid #cbd5e1; border-radius:8px; transform-origin:top left; }
         .production-factory .layout-line-title { position:absolute; display:flex; align-items:center; justify-content:center; height:50px; padding:0 20px; background:#fff; border:1px solid #cbd5e1; border-radius:6px; box-shadow:0 2px 6px rgba(0,0,0,.04); font-size:15px; font-weight:800; color:#1e293b; white-space:nowrap; }
         .production-factory .layout-station { position:absolute; display:flex; align-items:center; justify-content:center; text-align:center; background:#dbe7f6; border:1px solid #64748b; border-radius:3px; font-size:11px; font-weight:800; color:#1e293b; letter-spacing:-.2px; box-shadow:0 1px 2px rgba(0,0,0,.04); }
         .production-factory .layout-station.yellow,.production-factory .layout-station.test { background:#fae17d; }
@@ -1086,6 +1086,9 @@ body.route-view-active .route-groups-1 .route-empty { font-size:12px !important;
 }
 @media(max-width:600px){ body.route-view-active .route-line-grid.route-groups-many,body.route-view-active .route-line-grid.route-groups-4,body.route-view-active .route-line-grid.route-groups-3,body.route-view-active .route-line-grid.route-groups-2,body.route-view-active .route-line-grid.route-groups-1{grid-template-columns:1fr!important} }
 
+
+/* NOVO LAYOUT 2048x1319 - somente Supervisório Linha */
+.production-factory{width:2048px!important;height:1319px!important;background:#fff!important}.production-factory .layout-line-title{padding:0 10px!important;font-size:15px!important}.production-factory .layout-station{font-size:11px!important;border:1px solid #505050!important;border-radius:0!important;background:#cfcfcf!important;box-shadow:none!important}.production-factory .layout-station.yellow,.production-factory .layout-station.test{background:#fff500!important;border-color:#505050!important}.production-factory .layout-card{width:45px!important;height:30px!important;border:1px solid #c9cfd4!important;border-radius:0!important}.production-factory .layout-card-number{height:15px!important;min-height:15px!important;line-height:15px!important;background:#fff!important;color:#111!important;font-size:10px!important;border-bottom:1px solid #d5d9dc!important}.production-factory .layout-card-status{height:14px!important;min-height:14px!important}
 </style>
 </head>
 <body>
@@ -1998,7 +2001,7 @@ Lista: ${prog?.lista || '-'}`;
             const viewport = document.getElementById('production-layout-viewport');
             const factory = document.getElementById('map-root');
             if (!viewport || !factory) return;
-            const BASE_W = 2048, BASE_H = 1365;
+            const BASE_W = 2048, BASE_H = 1319;
             const vw = Math.max(1, viewport.clientWidth);
             const vh = Math.max(1, viewport.clientHeight);
             const escalaBase = Math.min(vw / BASE_W, vh / BASE_H);
@@ -2038,67 +2041,58 @@ Lista: ${prog?.lista || '-'}`;
         window.addEventListener('resize', ajustarNovoLayoutLinha);
 
         function renderMapa() {
-            const root = document.getElementById('map-root');
-            if (!root) return;
-            root.innerHTML = '';
-            const titles = [
-  ['Cabine Backhoe e Loader',55,118,210],['Cabine Grader',485,165,210],['Linha Principal Backhoe',835,165,210],['Linha Principal Loader',1255,165,195],['Linha Principal Grader',1653,174,195],['Linha Principal Crawler',250,1151,210]
+ const root=document.getElementById('map-root');if(!root)return;root.innerHTML='';
+ const titles=[
+['Cabine Backhoe e Loader',106,190,190,37],['Cabine Grader',658,188,177,35],['Linha Principal Backhoe',960,190,189,35],['Linha Principal Loader',1337,190,176,35],['Linha Principal Grader',1694,198,174,35],['Linha Principal Crawler',276,1097,300,45]
 ];
-const stations = []; 
-const cards = [];
-const st = (name,x,y,w,h,kind='') => stations.push({name,x,y,w,h,kind});
-const car = (n,x,y,status='green') => cards.push({n:String(n).padStart(3,'0'),x,y,status});
-
-// Cabine Backhoe e Loader
-st('LC3010',58,205,116,66,'yellow');st('LC3010B',174,205,117,66,'yellow');st('LC3020',58,271,116,66,'yellow');st('LC3030',58,337,116,66,'yellow');st('LC3040',58,403,116,66,'yellow');st('LC30-Quality',58,469,116,66,'yellow');
-st('Qualidade Backhoe',58,535,233,60);st('Qualidade Loader',58,595,233,60);st('LC10-Quality',58,655,116,66);st('LC1040',58,721,116,66);st('LC1030',58,787,116,66);st('LC1020',58,853,116,66);st('LC1010',58,919,116,66);st('LC1010B',174,919,117,66);
-[[253,5,273],[258,5,340],[258,5,375],[255,5,409],[255,5,444],[256,5,523],[256,5,558],[367,5,720],[367,5,756],[262,5,847],[261,5,882],[259,5,918],[259,5,953],[260,294,207],[260,294,242],[264,177,273],[267,177,374],[367,294,469],[367,294,504],[388,177,720],[388,177,756],[266,177,786],[266,177,821]].forEach(v=>car(...v));
-
-// Cabine Grader
-st('LC4010',525,271,118,66);st('LC4020',525,337,118,66);st('LC4030',525,403,118,66);st('LC4040',525,469,118,66);st('TESTES',525,535,118,60,'test');
-[[23,648,244],[47,648,279],[92,648,314],[344,648,349],[345,648,384],[346,648,419],[293,648,454],[349,648,489],[347,648,524],[350,648,559]].forEach(v=>car(...v));
-
-// Backhoe
-['RE1010','RE1020','RE1030','RE1030','RE1040','RE1040','RE1050','RE1050'].forEach((n,i)=>st(n,872,271+i*66,118,66));st('TESTES',872,799,118,120,'test');
-[[4,820,278],[5,820,355],[6,820,389],[5,820,424],[147,820,459],[22,820,494],[9,820,529],[17,820,564],[16,820,599],[13,820,634],[455,820,669],[145,820,704],[14,820,774]].forEach(v=>car(...v));
-[[3,993,278],[451,993,313],[7,993,348],[2,993,383],[8,993,418],[15,993,453],[45,993,488],[96,993,523],[98,993,558],[447,993,593],[10,993,628],[11,993,663],[12,993,698],[446,993,733],[454,993,768],[29,993,803]].forEach(v=>car(...v));
-
-// Loader
-st('PC1010',1284,271,118,66);st('EIXO',1402,271,58,66);st('PC1020',1284,337,118,66);st('PC1030',1284,403,118,132);st('PC1040',1284,535,118,186);st('PC1050',1284,721,118,132);st('TESTES',1284,853,118,66,'test');
-[[86,1232,263],[32,1232,298],[33,1232,333],[89,1232,368],[87,1232,403],[102,1232,438],[519,1232,493],[424,1232,570],[419,1232,641]].forEach(v=>car(...v));
-[[99,1463,282],[35,1405,337],[34,1405,372],[87,1405,407],[122,1405,442],[31,1405,477],[101,1405,512],[85,1405,547],[104,1405,582],[390,1405,617],[105,1405,652],[106,1405,687],[107,1405,722],[51,1405,757],[111,1405,792],[120,1405,827],[121,1405,862]].forEach(v=>car(...v));
-
-// Grader topo e linha
-st('MN1050D',1694,35,118,118,'yellow');[[223,1642,29],[306,1642,64],[462,1817,3],[338,1817,38],[339,1817,73],[432,1817,108],[437,1817,143]].forEach(v=>car(...v));
-['MN1010','MN1020','MN1030','MN1040','MN1050','MN1060'].forEach((n,i)=>st(n,1694,271+i*66,118,66));st('MN1070',1694,667,118,186);st('TESTES',1694,853,118,66,'test');
-[[529,1642,273],[331,1642,329],[333,1642,364],[332,1642,399],[252,1642,535],[340,1642,570],[225,1642,605],[334,1642,654],[335,1642,790],[336,1642,847]].forEach(v=>car(...v));
-[[330,1815,271],[430,1815,326],[308,1815,361],[607,1815,465],[527,1815,520],[316,1815,653],[309,1815,723],[461,1815,758],[148,1815,793],[348,1815,846],[352,1815,881]].forEach(v=>car(...v));
-
-// Crawler horizontal
-['TE1010','TE1020','TE1030','TE1040'].forEach((n,i)=>st(n,466+i*233,1140,233,84));st('TESTES',1398,1140,294,84,'test');st('LC2010',1459,1224,294,83);st('LC2020',1753,1224,237,83);
-[[167,562,1104],[168,795,1104],[173,981,1104],[176,1046,1104],[179,1273,1104],[178,1366,1104],[166,532,1229],[155,595,1229],[159,785,1229],[170,837,1229],[174,984,1229],[175,1047,1229],[177,1278,1229],[154,1553,1310],[152,1605,1310],[153,1657,1310],[151,1877,1310],[150,1929,1310]].forEach(v=>car(...v));
-            [[1988,0,59,188],[1988,271,59,803],[1988,1140,59,225]].forEach(v=>{
-                const e=document.createElement('div'); e.className='layout-wall';
-                Object.assign(e.style,{left:v[0]+'px',top:v[1]+'px',width:v[2]+'px',height:v[3]+'px'}); root.appendChild(e);
-            });
-            function add(cls,text,x,y,w,h,extra=''){
-                const e=document.createElement('div'); e.className=cls+(extra?' '+extra:''); e.textContent=text;
-                Object.assign(e.style,{left:x+'px',top:y+'px',width:w+'px',height:h+'px'}); root.appendChild(e);
-            }
-            titles.forEach(t=>add('layout-line-title',t[0],t[1],t[2],t[3],50));
-            stations.forEach(s=>add('layout-station',s.name,s.x,s.y,s.w,s.h,s.kind));
-            cards.forEach(c=>{
-                const id=String(Number(c.n));
-                const carData=CARROS[id] || Object.values(CARROS).find(item=>String(item.id)===id);
-                const statuses=carData && Array.isArray(carData.status) ? carData.status : [];
-                const c1=statuses[0]==='L'; const c2=statuses[1]==='L';
-                const e=document.createElement('div'); e.className='layout-card'; e.style.left=c.x+'px'; e.style.top=c.y+'px';
-                e.innerHTML=`<div class="layout-card-number">#${c.n}</div><div class="layout-card-status"><span class="layout-ci"><span class="layout-lbl">C1</span><span class="layout-dot ${c1?'green':'red'}">${c1?'C':'V'}</span></span><span class="layout-ci"><span class="layout-lbl">C2</span><span class="layout-dot ${c2?'green':'red'}">${c2?'C':'V'}</span></span></div>`;
-                root.appendChild(e);
-            });
-            const legend=document.createElement('div'); legend.className='layout-legend'; legend.textContent='Planta Operacional • Postos e Carros'; root.appendChild(legend);
-            requestAnimationFrame(ajustarNovoLayoutLinha);
-        }
+const stations=[
+// superiores
+['PC1033D',156,17,105,59,''],['PC1030E',156,76,105,60,''],['MN1060C',156,136,105,49,''],['MN1050B',523,18,54,62,''],['MN1010B',523,80,54,58,''],['MN1060B',523,138,54,63,''],['MN1050D',1731,76,105,109,'yellow'],
+// cabine backhoe loader
+['LC3010',105,231,104,60,'yellow'],['LC3010B',209,231,105,60,'yellow'],['LC3020',105,291,104,61,'yellow'],['LC3030',105,352,104,60,'yellow'],['LC3040',105,412,104,61,'yellow'],['LC30-Quality',105,473,104,60,'yellow'],['Qualidade Backhoe',105,533,209,56,''],['Qualidade Loader',105,589,209,55,''],['LC10-Quality',105,644,104,60,''],['LC1040',105,704,104,60,''],['LC1030',105,764,104,60,''],['LC1020',105,824,104,60,''],['LC1010',105,884,104,61,''],['LC1010B',209,884,105,61,''],
+// cabine grader/intermediaria
+['MN1040C',470,292,54,61,''],['TE1010B',470,353,54,60,''],['RE1010-PRÉ',574,292,74,61,''],['LC4010',683,292,105,61,''],['LC4020',683,353,105,60,''],['LC4030',683,413,105,60,''],['LC4040',683,473,105,60,''],['TESTES',683,533,105,56,'yellow'],
+// backhoe
+['RE1010',994,292,105,61,''],['RE1020',994,353,105,60,''],['RE1030',994,413,105,60,''],['RE1030',994,473,105,60,''],['RE1040',994,533,105,60,''],['RE1040',994,593,105,60,''],['RE1050',994,653,105,60,''],['RE1050',994,713,105,110,''],['TESTES',994,823,105,61,'yellow'],
+// loader
+['PC1010',1362,292,106,61,''],['EIXO',1468,292,52,61,''],['PC1020',1362,353,106,60,''],['PC1030',1362,413,106,174,''],['PC1040',1362,587,106,117,''],['PC1050',1362,704,106,119,''],['TESTES',1362,823,106,61,'yellow'],
+// grader
+['MN1010',1731,292,105,61,''],['MN1020',1731,353,105,60,''],['MN1030',1731,413,105,60,''],['MN1040',1731,473,105,60,''],['MN1050',1731,533,105,60,''],['MN1060',1731,593,105,110,''],['MN1070',1731,703,105,120,''],['TESTES',1731,823,105,61,'yellow'],
+// crawler
+['TE1010',576,1087,265,77,''],['TE1020',841,1087,207,77,''],['TE1030',1048,1087,209,77,''],['TE1040',1257,1087,231,77,''],['TESTES',1488,1087,296,77,'yellow'],['LC2010',1520,1164,264,77,''],['LC2020',1784,1164,210,77,'']
+];
+const cars=[
+// topo esquerdo
+['117',107,18],['108',267,18],['123',267,49],['88',316,49],['109',267,88],['458',107,142],['466',267,142],
+['329',475,23],['328',475,84],['307',475,145],
+// topo grader
+['462',1841,18],['223',1684,59],['306',1684,102],['338',1842,77],['339',1842,108],['432',1842,139],['437',1842,170],
+// cabine backhoe/loader
+['260',316,233],['260',316,264],['253',55,293],['264',211,293],['258',55,354],['258',55,385],['267',211,385],['255',55,416],['255',55,447],['367',314,471],['367',314,502],['256',55,522],['256',55,553],['367',55,704],['367',55,735],['388',211,704],['388',211,735],['266',211,766],['266',211,797],['262',55,821],['261',55,852],['259',55,883],['259',55,914],
+// cabine grader + LC40
+['523',526,293],['341',526,324],['160',526,363],['001',585,353],['23',794,293],['47',794,324],['344',794,355],['345',794,386],['346',794,417],['293',794,448],['349',794,479],['347',794,510],['350',794,541],
+// backhoe left
+['004',946,293],['005',946,374],['006',946,405],['15',946,436],['147',946,467],['022',946,498],['009',946,529],['17',946,560],['16',946,591],['13',946,622],['456',946,653],['145',946,684],['14',946,754],
+// backhoe right
+['003',1102,293],['451',1102,324],['007',1102,355],['002',1102,386],['008',1102,417],['015',1102,448],['45',1102,479],['96',1102,510],['98',1102,541],['447',1102,572],['10',1102,603],['11',1102,634],['12',1102,665],['446',1102,696],['454',1102,727],['29',1102,758],
+// loader left-right
+['86',1316,285],['32',1316,316],['33',1316,347],['89',1316,378],['37',1316,409],['102',1316,440],['519',1310,497],['424',1316,562],['419',1316,627],
+['99',1524,293],['35',1473,354],['34',1473,385],['87',1473,416],['122',1473,447],['31',1473,478],['101',1473,509],['85',1473,540],['104',1473,571],['390',1473,602],['105',1473,633],['106',1473,664],['107',1473,695],['111',1473,726],['51',1473,757],['111',1473,788],['120',1473,819],['121',1473,850],
+// grader
+['529',1684,293],['231',1684,347],['333',1684,378],['332',1684,409],['252',1684,533],['340',1684,564],['225',1684,595],['334',1684,646],['335',1684,769],['336',1684,823],
+['330',1840,293],['430',1840,347],['308',1840,378],['607',1840,471],['527',1840,533],['316',1840,644],['309',1840,706],['461',1840,737],['148',1840,768],['348',1840,819],['352',1840,850],
+// crawler acima
+['167',715,1053],['168',925,1053],['173',1092,1053],['176',1152,1053],['179',1353,1053],['178',1435,1053],
+// crawler abaixo
+['166',688,1168],['155',744,1168],['159',898,1168],['170',948,1168],['174',1095,1168],['175',1150,1168],['177',1358,1168],['154',1601,1243],['152',1650,1243],['153',1699,1243],['151',1900,1243],['150',1949,1243]
+];
+const structures=[[1994,0,53,216],[1994,291,53,717],[1994,1086,53,233]];
+ structures.forEach(v=>{const e=document.createElement('div');e.className='layout-wall';Object.assign(e.style,{left:v[0]+'px',top:v[1]+'px',width:v[2]+'px',height:v[3]+'px'});root.appendChild(e);});
+ function add(cls,text,x,y,w,h,extra=''){const e=document.createElement('div');e.className=cls+(extra?' '+extra:'');e.textContent=text;Object.assign(e.style,{left:x+'px',top:y+'px',width:w+'px',height:h+'px'});root.appendChild(e);}
+ titles.forEach(t=>add('layout-line-title',t[0],t[1],t[2],t[3],t[4]));stations.forEach(s=>add('layout-station',s[0],s[1],s[2],s[3],s[4],s[5]));
+ cars.forEach(c=>{const displayId=String(c[0]),lookupId=String(Number(displayId));const d=CARROS[lookupId]||CARROS[displayId]||Object.values(CARROS).find(i=>String(i.id)===lookupId||String(i.id)===displayId);const ss=d?(Array.isArray(d.status)?d.status:Object.keys(d.status||{}).sort((a,b)=>Number(a)-Number(b)).map(k=>d.status[k])):[];const c1=ss[0]==='L',c2=ss[1]==='L';const e=document.createElement('div');e.className='layout-card';e.style.left=c[1]+'px';e.style.top=c[2]+'px';e.innerHTML=`<div class="layout-card-number">#${displayId}</div><div class="layout-card-status"><span class="layout-ci"><span class="layout-lbl">C1</span><span class="layout-dot ${c1?'green':'red'}">${c1?'C':'V'}</span></span><span class="layout-ci"><span class="layout-lbl">C2</span><span class="layout-dot ${c2?'green':'red'}">${c2?'C':'V'}</span></span></div>`;root.appendChild(e);});
+ const l=document.createElement('div');l.className='layout-legend';l.textContent='Planta Operacional • Postos e Carros';root.appendChild(l);requestAnimationFrame(ajustarNovoLayoutLinha);
+}
 
         function renderSupervisorio() {
             const vtDiv = document.getElementById("sup-tenda-vt-content");
